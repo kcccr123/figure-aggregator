@@ -15,6 +15,9 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
+
+## WEBSITE IS DOWN WHILE I MIGRATE TO GCP
+
 Personal learning project for Full-stack development.
 
 Using Puppeteer, product data from various online stores is autonomously scraped at scheduled intervals in a cloud-based environment hosted on Heroku.
