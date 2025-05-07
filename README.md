@@ -16,8 +16,6 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-## WEBSITE IS DOWN WHILE I MIGRATE TO GCP
-
 Personal learning project for Full-stack development.
 
 Using Puppeteer, product data from various online stores is autonomously scraped at scheduled intervals in a cloud-based environment hosted on Heroku.
@@ -39,11 +37,6 @@ The website features basic search functions and filters, enhancing user experien
 
 The code for web scraping and server operations is located in a separate repository, linked below.
 [Backend Repository](https://github.com/kcccr123/figure-aggregator-backend)
-
-<!-- GETTING STARTED -->
-## Getting Started
-
-To view the site, travel to: https://figure-center.netlify.app/
 
 <!-- CONTACT -->
 ## Contact
