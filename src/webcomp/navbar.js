@@ -1,34 +1,23 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import SearchBar from "./searchbar";
-import Axios from "axios";
 import Browse from "./browse";
-import logo from './images/logo.png'
-import './navbar.css'
+import logo from './images/logo.png';
+import './navbar.css';
 
-export default function Navbar() {
-    async function UpdateDB() {
-        Axios.post('https://figurecenter.herokuapp.com/updateDB').then(() => {
-        })
-    }
+export default function Navbar(){
+  return(
+    <header className="navbar">
+      <Link to="/" className="navbar__brand">
+        <img src={logo} alt="FigureCenter logo"/>
+        FigureCenter
+      </Link>
 
-    return (
-        <div className="navbarContainer">
-            <div className="navbarElementMain">
-                <Link className="navbarLink" to='/'>
-                    <img id='mainLogo' src={logo} className='navbarLogo' style={{ display: 'inline' }}></img>
-                    FigureCenter
-                </Link>
-            </div>
-            <div className="navbarSearch">
-                <SearchBar />
-            </div>
-            <div className="navbarElement">
-                <div className="navbarLinkCata">
-                    <Browse />
-                </div>
-            </div>
+      <div className="navbar__search">
+        <SearchBar/>
+      </div>
 
-        </div>
-    )
+      <Browse/>
+    </header>
+  );
 }

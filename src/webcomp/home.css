@@ -1,185 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Krona+One&display=swap');
-
-
-.titleCard {
-    display: flex;
-    width: 100vw;
-    height: 750px;
-    align-items: center;
-    border-bottom-style: solid;
-    border-bottom-width: 4px;
-    border-bottom-color: #B3365B;
-    border-top-style: solid;
-    border-top-width: 1px;
-    border-top-color: #B3365B;
-}
-
-.titleCardBox {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 70%;
-    border-left-style: solid;
-    border-left-width: 3px;
-    border-left-color: #B3365B;
-    border-right-style: solid;
-    border-right-width: 3px;
-    border-right-color: #B3365B;
-}
-
-
-
-.titleCardMain {
-    font-size: 50px;
-}
-
-.titleCardBio {
-    font-size: 35px;
-}
-
-.homeFiller {
-    width: 15%;
-    height: 100%;
-    background-color: #EBCACA;
-}
-
-.image1 {
-    animation: slide-in 800ms;
-    width: 80%;
-    height: 750px;
-    object-fit: contain;
-
-}
-
-
-.image2 {
-    animation: slide-in 800ms;
-    width: 80%;
-    height: 700px;
-    object-fit: contain;
-}
-
-
-@keyframes slide-in {
-    0% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-.showCase {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    row-gap: 10px;
-    margin-bottom: 20px;
-}
-
-.SolarisContainer {
-    height: 600px;
-    width: 97vw;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    border-style: groove;
-    border-color: #031C32;
-    border-radius: 8px;
-}
-
-.OtakuModeContainer {
-    height: 600px;
-    width: 97vw;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    border-style: groove;
-    border-color: #031C32;
-    border-radius: 8px;
-}
-
-.featuredContainer {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: 95%;
-    height: 100%;
-}
-
-.productFeatured {
-    width: 19%;
-    height: 100%;
-    background-color: white;
-    padding-left: 1%;
-    padding-right: 1%;
-}
-
-.FproductImage {
-    transition: all 450ms ease-in-out;
-    width: 100%;
-    height: 300px;
-    object-fit: contain;
-
-}
-
-.productInnerStatic {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-}
-
-
-.productImagesAnimated {
-    transition: all 600ms ease-in-out;
-    width: 100%;
-    height: 425px;
-    object-fit: contain;
-}
-
-
-.featuredHeader {
-    font-family: 'Krona One', sans-serif;
-    color: #B3365B;
-    font-size: 60px;
-    width: 85%;
-}
-
-.headerAlignment {
-    width: 100vw;
-    display: flex;
-    margin-top: 25px;
-    margin-bottom: 25px;
-    height: 50px;
-    justify-content: center;
-    align-items: center;
-}
-
-.featuredLinks {
-    font-size: 20px;
-    width: 5%;
-    font-family: 'Krona One', sans-serif;
-    color: #B3365B;
-
-}
-
-
-.featuredTitle {
-    font-size: 20px;
-    font-weight: bold;
-    color: #B3365B;
-
-}
-
-.featuredPrice {
-    color: #B3365B;
-}
+/* ---------- HERO ---------- */
+.hero{
+    position:relative;width:100%;height:60vh;overflow:hidden;
+    border-block:4px solid var(--clr-primary);
+  }
+  .hero img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    animation:fade 16s infinite;
+  }
+  .hero img:nth-of-type(2){animation-delay:8s}
+  
+  @keyframes fade{
+    0%,45%{opacity:1}
+    50%,95%{opacity:0}
+  }
+  
+  .hero__title{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    text-align:center;
+    color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.6);
+  }
+  .hero__title h1{font-family:var(--font-heading);font-size:clamp(2rem,4vw,3.5rem);margin-bottom:1rem}
+  .hero__title p{font-size:clamp(1rem,2vw,1.5rem);max-width:32rem}
+  
+  /* ---------- SHOWCASE ---------- */
+  .showcase .show-more{
+    display:block;margin:1rem auto 3rem auto;text-align:center;
+  }
+  
