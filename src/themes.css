@@ -64,4 +64,22 @@ button,input,select,textarea{font-family:inherit}
     margin-bottom: .5rem;
   }
   
-.card__meta{color:var(--clr-primary);font-weight:500;margin-bottom:.5rem}
+  .card__meta {
+    margin-top: .5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+  }
+  
+  .card__line {
+    font-size: .9rem;
+    color: var(--clr-primary);
+    margin: 0;
+  }
+  
+  .card__footer {
+    margin-top: auto;    /* push website to bottom */
+    font-size: .8rem;
+    color: var(--clr-secondary);
+  }
+      

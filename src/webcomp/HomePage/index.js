@@ -2,9 +2,9 @@ import React,{useEffect,useState} from "react";
 import { Link ,createSearchParams } from "react-router-dom";
 import axios from "axios";
 
-import ProductCard from "./ProductCard";
-import solaris from './images/SolarisFiller.png';
-import tokyo   from './images/tokyoOtakuMode2.jpg';
+import ProductCard from "../ProductCard";
+import solaris from '../images/SolarisFiller.png';
+import tokyo   from '../images/tokyoOtakuMode2.jpg';
 import './home.css';
 
 const BASE_URL    = process.env.REACT_APP_API_BASE_URL;
@@ -14,7 +14,6 @@ export default function HomePage(){
   const [featuredSolaris,setFeaturedSolaris] = useState([]);
   const [featuredTOM,setFeaturedTOM]         = useState([]);
 
-  /* helper used by API */
   function deseralizeImages(str){
     return str.split(">>><<<");
   }
@@ -32,7 +31,6 @@ export default function HomePage(){
 
   return(
     <>
-      {/* HERO */}
       <section className="hero">
         <img src={solaris} alt="Solaris Japan banner"/>
         <img src={tokyo}   alt="Tokyo Otaku Mode banner"/>
@@ -42,7 +40,6 @@ export default function HomePage(){
         </div>
       </section>
 
-      {/* FEATURED LISTS */}
       <section className="showcase">
         <h2 className="section-heading">Featured – Solaris Japan</h2>
         <div className="cards-grid">

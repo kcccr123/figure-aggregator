@@ -1,8 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import SearchBar from "./searchbar";
-import Browse from "./browse";
-import logo from './images/logo.png';
+import SearchBar from "../SearchBar";
+import Browse from "./Browse";
+import logo from '../images/logo.png';
 import './navbar.css';
 
 export default function Navbar(){
