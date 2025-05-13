@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Navbar from './webcomp/navbar';
-import HomePage from './webcomp/homepage';
-import SearchResults from './webcomp/searchresultsURL';
+import Navbar from './webcomp/Navbar';
+import HomePage from './webcomp/HomePage/index';
+import SearchResults from './webcomp/SearchResults';
 
 function App() {
   return (
