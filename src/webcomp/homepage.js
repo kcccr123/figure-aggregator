@@ -5,46 +5,50 @@ import tokyo from './images/tokyoOtakuMode2.jpg'
 import Axios from 'axios'
 import './home.css'
 
+const BASE_URL    = process.env.REACT_APP_API_BASE_URL;               
+const EP_FEATURED = process.env.REACT_APP_API_ENDPOINT_FEATURED_ITEMS; 
+
 export default function HomePage() {
+    
     const [featureHover, setFeatureHover] = useState("")
     const [currentImage, setImage] = useState(1)
     const [currentInterval, setCurrentInterval] = useState("")
     const [hoverCounter, setHoverCounter] = useState(0)
     const [featuredSolaris, setFeaturedSolaris] = useState([])
     const [featuredTOM, setFeaturedTOM] = useState([])
+
+
     useEffect(() => {
-        Axios.get('https://figurecenter.herokuapp.com/featuredItems', {
-            params: {
-                store: "SolarisJapan"
-            }
-        }).then((response) => {
-            for (let i = 0; i < response.data.length; i++) {
-                response.data[i].images = deseralizeImages(response.data[i].images.toString())
-            }
-            setFeaturedSolaris(response.data)
-        })
-        Axios.get('https://figurecenter.herokuapp.com/featuredItems', {
-            params: {
-                store: "TokyoOtakuMode"
-            }
-        }).then((response) => {
-            for (let i = 0; i < response.data.length; i++) {
-                response.data[i].images = deseralizeImages(response.data[i].images.toString())
-            }
-            setFeaturedTOM(response.data)
-        })
-        let slidecount = 0
-        setInterval(function () {
-            if (slidecount < 2) {
-                slidecount += 1
-                setImage(slidecount)
-            }
-            else {
-                slidecount = 1
-                setImage(slidecount)
-            }
-        }, 7000)
-    }, [])
+    // Solaris Japan
+    Axios.get(`${BASE_URL}${EP_FEATURED}`, {
+        params: { store: "SolarisJapan" }
+    }).then(response => {
+        const data = response.data.map(item => ({
+        ...item,
+        images: deseralizeImages(item.images.toString())
+        }));
+        setFeaturedSolaris(data);
+    });
+
+    // Tokyo Otaku Mode
+    Axios.get(`${BASE_URL}${EP_FEATURED}`, {
+        params: { store: "TokyoOtakuMode" }
+    }).then(response => {
+        const data = response.data.map(item => ({
+        ...item,
+        images: deseralizeImages(item.images.toString())
+        }));
+        setFeaturedTOM(data);
+    });
+
+    // slideshow interval (unchanged)
+    let slidecount = 0;
+    setInterval(() => {
+        slidecount = slidecount < 2 ? slidecount + 1 : 1;
+        setImage(slidecount);
+    }, 7000);
+    }, []);
+
 
 
     function nextImage(image) {

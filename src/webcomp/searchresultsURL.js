@@ -4,6 +4,9 @@ import './searchresults.css'
 import { useSearchParams } from "react-router-dom";
 import { Checkbox } from "@material-ui/core";
 
+const BASE_URL = process.env.REACT_APP_API_BASE_URL;               
+const EP_NUM   = process.env.REACT_APP_API_ENDPOINT_NUM_IN_STORE;  
+const EP_SEARCH= process.env.REACT_APP_API_ENDPOINT_SEARCH;        
 
 export default function SearchResults() {
     const [searchParems, setSearchParems] = useSearchParams();
@@ -14,36 +17,43 @@ export default function SearchResults() {
     var pages = getPages()
 
     function getItems(p) {
-        Axios.get('https://figurecenter.herokuapp.com/numInStore', {
-            params: {
-                name: "SolarisJapan",
-                searchParem: p
-            }
-        }).then((response) => {
-            setSolarisNums(response.data[0].count.toString())
-        })
-        Axios.get('https://figurecenter.herokuapp.com/numInStore', {
-            params: {
-                name: "TokyoOtakuMode",
-                searchParem: p
-            }
-        }).then((response) => {
-            setTOMNums(response.data[0].count.toString())
-        })
-    }
-    function getData(p, filters, sortPrice, ordertype) {
-        Axios.get('https://figurecenter.herokuapp.com/search', {
-            params: {
-                searchParem: p,
-                filters: filters,
-                sort$: sortPrice,
-                ordertype: ordertype
-            }
-        }).then((response) => {
-            setSearchResults(response.data)
-        })
+    Axios.get(`${BASE_URL}${EP_NUM}`, {
+        params: {
+        name:        "SolarisJapan",
+        searchParem: p
+        }
+    }).then(response => {
+        setSolarisNums(response.data[0].count.toString());
+    });
+
+    Axios.get(`${BASE_URL}${EP_NUM}`, {
+        params: {
+        name:        "TokyoOtakuMode",
+        searchParem: p
+        }
+    }).then(response => {
+        setTOMNums(response.data[0].count.toString());
+    });
     }
 
+    function getData(p, filters, sortPrice, ordertype) {
+        Axios.get(`${BASE_URL}${EP_SEARCH}`, {
+          params: {
+            searchParem: p,
+            filters:     filters,
+            sort$:       sortPrice,
+            ordertype:   ordertype
+          }
+        })
+        .then(response => {
+          setSearchResults(response.data);
+        })
+        .catch(err => {
+          console.error("Search error:", err);
+          setSearchResults([]);
+        });
+      }
+    
     function getPages() {
         const pages2 = []
         const remainder = searchResults.length % 24
@@ -57,6 +67,7 @@ export default function SearchResults() {
     //get initial pages
     useEffect(() => {
         getData(searchParems.get('query'), searchParems.get('filters'), searchParems.get('sort$'), searchParems.get('ordertype'))
+        console.log('hello?')
         setCurrentPage(1)
         pages = getPages()
     }, [searchParems.get('query'), searchParems.get('filters'), searchParems.get('sort$'), searchParems.get('ordertype')])
