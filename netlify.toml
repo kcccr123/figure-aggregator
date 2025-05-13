@@ -1,22 +1,26 @@
+# The following redirect is intended for use with most SPAs that handle
+# routing internally.
 [[redirects]]
-  from   = "/api/*"
-  to     = "https://34.110.244.134/figure-aggregator/:splat"
+  from = "/*"
+  to = "/index.html"
   status = 200
-  force  = true
 
-[[redirects]]
-  from   = "/*"
-  to     = "/index.html"
-  status = 200
+[[headers]]
+  # Define which paths this specific [[headers]] block will cover.
+  for = "/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
 
 [build]
-  command = "npm run build"
-  publish = "build"
+  command   = "npm run build"
+  publish   = "build"
 
 [build.environment]
-  # point your React app at the Netlify proxy
-  REACT_APP_API_BASE_URL              = "/api"
+  # Point to your GKE Ingress IP (or custom domain) in production
+  REACT_APP_API_BASE_URL = "http://34.110.244.134/figure-aggregator"
+
+  # Optional: mirror the same path vars
   REACT_APP_API_ENDPOINT_FEATURED_ITEMS = "/featuredItems"
-  REACT_APP_API_ENDPOINT_SEARCH         = "/search"
-  REACT_APP_API_ENDPOINT_NUM_IN_STORE   = "/numInStore"
-  REACT_APP_API_ENDPOINT_FIGURES        = "/figures"
+  REACT_APP_API_ENDPOINT_SEARCH          = "/search"
+  REACT_APP_API_ENDPOINT_NUM_IN_STORE    = "/numInStore"
+  REACT_APP_API_ENDPOINT_FIGURES         = "/figures"
