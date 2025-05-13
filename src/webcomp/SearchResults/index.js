@@ -1,3 +1,5 @@
+// src/webcomp/SearchResults/index.js
+
 import React, { useEffect, useState } from "react";
 import { useSearchParams }             from "react-router-dom";
 import Checkbox                         from "@material-ui/core/Checkbox";
@@ -12,42 +14,48 @@ const EP_NUM    = process.env.REACT_APP_API_ENDPOINT_NUM_IN_STORE;
 
 export default function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [results,      setResults]      = useState([]);
+
+  // Extracted params for stable deps
+  const query    = searchParams.get("query")   || "";
+  const filters  = searchParams.get("filters") || "00";
+  const preorder = searchParams.get("preorder");
+  const preowned = searchParams.get("preowned");
+  const sortVal  = searchParams.get("sort$");
+
+  // State
   const [countSolaris, setCountSolaris] = useState(0);
   const [countTOM,     setCountTOM]     = useState(0);
+  const [results,      setResults]      = useState([]);
   const [currentPage,  setCurrentPage]  = useState(1);
 
-  // Fetch counts when query/filters/preorder/preowned change
+  // 1) Fetch store counts when `query` changes
   useEffect(() => {
-    const q = searchParams.get("query") || "";
-    axios.get(`${BASE_URL}${EP_NUM}`, { params: { name: "SolarisJapan",   searchParem: q } })
+    axios
+      .get(`${BASE_URL}${EP_NUM}`, { params: { name: "SolarisJapan",   searchParem: query } })
       .then(res => setCountSolaris(res.data[0]?.count || 0))
       .catch(() => setCountSolaris(0));
-    axios.get(`${BASE_URL}${EP_NUM}`, { params: { name: "TokyoOtakuMode", searchParem: q } })
+
+    axios
+      .get(`${BASE_URL}${EP_NUM}`, { params: { name: "TokyoOtakuMode", searchParem: query } })
       .then(res => setCountTOM(res.data[0]?.count || 0))
       .catch(() => setCountTOM(0));
-  }, [
-    searchParams.get("query"),
-    searchParams.get("filters"),
-    searchParams.get("preorder"),
-    searchParams.get("preowned")
-  ]);
+  }, [query]);
 
-  // Fetch results when any filter or sort changes (added sort$ here)
+  // 2) Fetch results whenever any filter/sort param changes
   useEffect(() => {
-    axios.get(`${BASE_URL}${EP_SEARCH}`, { params: Object.fromEntries(searchParams) })
+    const params = { query, filters };
+    if (preorder) params.preorder = preorder;
+    if (preowned) params.preowned = preowned;
+    if (sortVal)  params["sort$"] = sortVal;
+
+    axios
+      .get(`${BASE_URL}${EP_SEARCH}`, { params })
       .then(res => {
         setResults(res.data);
         setCurrentPage(1);
       })
       .catch(() => setResults([]));
-  }, [
-    searchParams.get("query"),
-    searchParams.get("filters"),
-    searchParams.get("preorder"),
-    searchParams.get("preowned"),
-    searchParams.get("sort$")
-  ]);
+  }, [query, filters, preorder, preowned, sortVal]);
 
   // Pagination
   const pageSize = 40;
@@ -56,7 +64,7 @@ export default function SearchResults() {
     pages.push(results.slice(i, i + pageSize));
   }
 
-  // Helpers to update URL params
+  // Helper to update URL params
   const setParam = (key, value) => {
     const next = { ...Object.fromEntries(searchParams) };
     if (!value) delete next[key];
@@ -64,58 +72,63 @@ export default function SearchResults() {
     setSearchParams(next);
   };
 
-  const handleStoreFilter = key => {
-    const cur = searchParams.get("filters") || "00";
+  // Handlers
+  const handleStoreFilter = (storeKey) => {
+    const cur = filters;
     const updated =
-      key === "SolarisJapanCheck"
+      storeKey === "SolarisJapanCheck"
         ? (cur[0] === "0" ? "1"+cur[1] : "0"+cur[1])
         : (cur[1] === "0" ? cur[0]+"1" : cur[0]+"0");
     setParam("filters", updated);
   };
 
   const handlePreorderFilter = () =>
-    setParam("preorder", searchParams.get("preorder")==="true" ? "" : "true");
+    setParam("preorder", preorder === "true" ? "" : "true");
 
   const handlePreownedFilter = () =>
-    setParam("preowned", searchParams.get("preowned")==="true" ? "" : "true");
+    setParam("preowned", preowned === "true" ? "" : "true");
 
-  const handleSortChange = e =>
+  const handleSortChange = (e) =>
     setParam("sort$", e.target.value);
 
   return (
     <div className="searchContainer">
       <aside className="filterContainer">
         <div className="filterTitle">Select Store</div>
+
         <div className="filterItem">
           <Checkbox
             style={{ color: "var(--clr-primary)" }}
-            checked={searchParams.get("filters")?.[0] === "1"}
+            checked={filters[0] === "1"}
             onChange={() => handleStoreFilter("SolarisJapanCheck")}
           />
           Solaris Japan ({countSolaris})
         </div>
+
         <div className="filterItem">
           <Checkbox
             style={{ color: "var(--clr-primary)" }}
-            checked={searchParams.get("filters")?.[1] === "1"}
+            checked={filters[1] === "1"}
             onChange={() => handleStoreFilter("TokyoOtakuModeCheck")}
           />
           Tokyo Otaku Mode ({countTOM})
         </div>
 
         <div className="filterTitle">Condition</div>
+
         <div className="filterItem">
           <Checkbox
             style={{ color: "var(--clr-primary)" }}
-            checked={searchParams.get("preorder") === "true"}
+            checked={preorder === "true"}
             onChange={handlePreorderFilter}
           />
           Pre-Order Only
         </div>
+
         <div className="filterItem">
           <Checkbox
             style={{ color: "var(--clr-primary)" }}
-            checked={searchParams.get("preowned") === "true"}
+            checked={preowned === "true"}
             onChange={handlePreownedFilter}
           />
           Pre-Owned Only
@@ -124,15 +137,12 @@ export default function SearchResults() {
         <div className="filterTitle">Sort by Price</div>
         <div className="filterItem">
           <select
-            value={searchParams.get("sort$") || ""}
+            value={sortVal || ""}
             onChange={handleSortChange}
             style={{
-              width: "100%",
-              padding: "0.5rem",
+              width: "100%", padding: "0.5rem",
               borderRadius: "var(--radius)",
-              border: "1px solid var(--clr-secondary)",
-              background: "#fff",
-              fontSize: "1rem"
+              border: "1px solid var(--clr-secondary)"
             }}
           >
             <option value="">None</option>
@@ -140,11 +150,11 @@ export default function SearchResults() {
             <option value="low">Low → High</option>
           </select>
         </div>
-        </aside>
+      </aside>
 
       <main className="alignment">
         <div className="resultsFor">
-          Results for “{searchParams.get("query") || "All"}”
+          Results for “{query || "All"}”
         </div>
         <hr className="searchLine" />
 
@@ -175,12 +185,7 @@ export default function SearchResults() {
               setCurrentPage(p);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            sx={{
-              "& .Mui-selected": {
-                bgcolor: "var(--clr-primary)!important",
-                color: "#fff"
-              }
-            }}
+            sx={{ "& .Mui-selected": { bgcolor: "var(--clr-primary)!important", color: "#fff" } }}
           />
         )}
       </main>
