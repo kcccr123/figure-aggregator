@@ -10,7 +10,7 @@
 
 [build.environment]
   # Point to your GKE Ingress IP (or custom domain) in production
-  REACT_APP_API_BASE_URL = "https://34.110.244.134/figure-aggregator"
+  REACT_APP_API_BASE_URL = "http://34.110.244.134"
 
   # Optional: mirror the same path vars
   REACT_APP_API_ENDPOINT_FEATURED_ITEMS = "/featuredItems"
