@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import SearchBar from "../SearchBar";
+import SearchBar from "./SearchBar";
 import Browse from "./Browse";
 import logo from '../images/logo.png';
 import './navbar.css';
