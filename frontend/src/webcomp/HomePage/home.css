@@ -1,4 +1,4 @@
-/* ---------- HERO ---------- */
+
 .hero{
     position:relative;width:100%;height:60vh;overflow:hidden;
     border-block:4px solid var(--clr-primary);
@@ -23,8 +23,16 @@
   .hero__title h1{font-family:var(--font-heading);font-size:clamp(2rem,4vw,3.5rem);margin-bottom:1rem}
   .hero__title p{font-size:clamp(1rem,2vw,1.5rem);max-width:32rem}
   
-  /* ---------- SHOWCASE ---------- */
   .showcase .show-more{
     display:block;margin:1rem auto 3rem auto;text-align:center;
+  }
+  
+  .cards-grid {
+    display: flex;           
+    flex-wrap: wrap;         
+    justify-content: center; 
+    gap: 1.5rem;             
+    max-width: 1400px;
+    margin: 0 auto;
   }
   
