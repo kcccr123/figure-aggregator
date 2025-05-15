@@ -8,21 +8,15 @@
 
 <h3 align="center">Figure Aggregator</h3>
 
-  <p align="center">
-   A Shopify-style online store for toys and models with automated data aggregation.
-    <br />
-
+<p align="center">
+  A Shopify-style online store for toys and models with automated data aggregation.
+  <br />
+</p>
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-Personal learning project for Full-stack development.
-
-Using Puppeteer, product data from various online stores is autonomously scraped at scheduled intervals in a cloud-based environment hosted on Heroku.
-
-Express.js is employed to build the server-side framework, handling API requests, user sessions, and dynamic content delivery. The scraped data is stored in a MySQL database on Heroku, allowing the website to retrieve and display updated product information.
-
-The website features basic search functions and filters, enhancing user experience and making it easy for visitors to browse and find products.
+Figure Aggregator is a personal learning project that unifies multiple collectible figure retailers into a single storefront. It provides basic quality-of-life features such as browsing, filters, and search functionality, allowing users to easily view products from a variety of stores in one location. Featured items from these stores are also displayed on the homepage.
 
 ### Built With
 
@@ -30,15 +24,26 @@ The website features basic search functions and filters, enhancing user experien
 ![ReactJS](https://img.shields.io/badge/-ReactJs-61DAFB?logo=react&logoColor=white&style=for-the-badge)
 ![Node.js Badge](https://img.shields.io/badge/Node.js-393?logo=nodedotjs&logoColor=fff&style=for-the-badge)
 ![Express Badge](https://img.shields.io/badge/Express-000?logo=express&logoColor=fff&style=for-the-badge)
- ![MySQL Badge](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=fff&style=for-the-badge)
- ![Heroku](https://img.shields.io/static/v1?style=for-the-badge&message=Heroku&color=430098&logo=Heroku&logoColor=FFFFFF&label=)
+
+![MySQL Badge](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=fff&style=for-the-badge)
+![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=for-the-badge&logo=kubernetes&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Google Cloud](https://img.shields.io/badge/GoogleCloud-%234285F4.svg?style=for-the-badge&logo=google-cloud&logoColor=white)
+
+### Frontend
+The frontend is built with React.js, and products are dynamically displayed via Axios calls to the API. It is currently deployed on Netlify.
 
 ### Backend
+The backend architecture runs on Google Cloud Platform, specifically on Google Kubernetes Engine.
 
-The code for web scraping and server operations is located in a separate repository, linked below.
-[Backend Repository](https://github.com/kcccr123/figure-aggregator-backend)
+We provision a global static IP and attach it to an HTTPS Load Balancer, which is configured by GKE’s Ingress Controller. Incoming requests hit the Load Balancer, which applies host- and path-based rules to forward traffic to a Service (backed by NEGs/NodePorts) inside the cluster.
+
+That Service routes API calls to Docker-containerized Express.js pods running on GKE. Each pod includes a Cloud SQL Proxy sidecar to maintain the connection to a MySQL (Cloud SQL) instance, allowing the backend to scale up or down without any changes to the database configuration.
+
+A Puppeteer-based scraper runs as a Kubernetes CronJob in GKE, automatically collecting and updating product data in the Cloud SQL database.
 
 <!-- CONTACT -->
 ## Contact
-Feel free to contact me at:
-@Kevin Chen - kevinz.chen@mail.utoronto.ca
+
+Feel free to contact me at:  
+@Kevin Chen – kevinz.chen@mail.utoronto.ca  
