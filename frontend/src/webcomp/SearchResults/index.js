@@ -2,15 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useSearchParams }             from "react-router-dom";
-import Checkbox                         from "@material-ui/core/Checkbox";
+import Checkbox                         from "@mui/material/Checkbox";
 import Pagination                       from "@mui/material/Pagination";
-import axios                            from "axios";
+import { fetchStoreCounts, fetchSearchResults } from './service';
 import "./searchresults.css";
 import ProductCard                      from "../ProductCard";
-
-const BASE_URL  = process.env.REACT_APP_API_BASE_URL;
-const EP_SEARCH = process.env.REACT_APP_API_ENDPOINT_SEARCH;
-const EP_NUM    = process.env.REACT_APP_API_ENDPOINT_NUM_IN_STORE;
 
 export default function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -30,15 +26,10 @@ export default function SearchResults() {
 
   // 1) Fetch store counts when `query` changes
   useEffect(() => {
-    axios
-      .get(`${BASE_URL}${EP_NUM}`, { params: { name: "SolarisJapan",   searchParem: query } })
-      .then(res => setCountSolaris(res.data[0]?.count || 0))
-      .catch(() => setCountSolaris(0));
-
-    axios
-      .get(`${BASE_URL}${EP_NUM}`, { params: { name: "TokyoOtakuMode", searchParem: query } })
-      .then(res => setCountTOM(res.data[0]?.count || 0))
-      .catch(() => setCountTOM(0));
+    fetchStoreCounts(query).then(counts => {
+      setCountSolaris(counts.solaris);
+      setCountTOM(counts.tom);
+    });
   }, [query]);
 
   // 2) Fetch results whenever any filter/sort param changes
@@ -48,13 +39,10 @@ export default function SearchResults() {
     if (preowned) params.preowned = preowned;
     if (sortVal)  params["sort$"] = sortVal;
 
-    axios
-      .get(`${BASE_URL}${EP_SEARCH}`, { params })
-      .then(res => {
-        setResults(res.data);
-        setCurrentPage(1);
-      })
-      .catch(() => setResults([]));
+    fetchSearchResults(params).then(results => {
+      setResults(results);
+      setCurrentPage(1);
+    });
   }, [query, filters, preorder, preowned, sortVal]);
 
   // Pagination

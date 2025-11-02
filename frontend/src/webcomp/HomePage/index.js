@@ -1,14 +1,11 @@
-import React,{useEffect,useState} from "react";
+import {useEffect,useState} from "react";
 import { Link ,createSearchParams } from "react-router-dom";
-import axios from "axios";
+import { fetchFeaturedItems } from './service';
 
 import ProductCard from "../ProductCard";
 import solaris from '../images/SolarisFiller.png';
 import tokyo   from '../images/tokyoOtakuMode2.jpg';
 import './home.css';
-
-const BASE_URL    = process.env.REACT_APP_API_BASE_URL;
-const EP_FEATURED = process.env.REACT_APP_API_ENDPOINT_FEATURED_ITEMS;
 
 export default function HomePage(){
   const [featuredSolaris,setFeaturedSolaris] = useState([]);
@@ -19,14 +16,12 @@ export default function HomePage(){
   }
 
   useEffect(()=>{
-    axios.get(`${BASE_URL}${EP_FEATURED}`,{params:{store:"SolarisJapan"}})
-         .then(res=>setFeaturedSolaris(
-           res.data.map(it=>({...it,images:deseralizeImages(it.images.toString())}))
-         ));
-    axios.get(`${BASE_URL}${EP_FEATURED}`,{params:{store:"TokyoOtakuMode"}})
-         .then(res=>setFeaturedTOM(
-           res.data.map(it=>({...it,images:deseralizeImages(it.images.toString())}))
-         ));
+    fetchFeaturedItems("SolarisJapan").then(data =>
+      setFeaturedSolaris(data.map(it => ({ ...it, images: deseralizeImages(it.images.toString()) })))
+    );
+    fetchFeaturedItems("TokyoOtakuMode").then(data =>
+      setFeaturedTOM(data.map(it => ({ ...it, images: deseralizeImages(it.images.toString()) })))
+    );
   },[]);
 
   return(
