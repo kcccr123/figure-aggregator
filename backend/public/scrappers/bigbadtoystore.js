@@ -41,7 +41,6 @@ async function scrapeBBTSVari(pageNum = 1) {
       Array.from(document.querySelectorAll('a.product-card')).map(a => a.href)
     );
     const uniqueLinks = [...new Set(productLinks)];
-    console.log(`Found ${productLinks.length} product links, ${uniqueLinks.length} unique.`);
     console.log(`Found ${productLinks.length} product links.`);
 
     const results = [];
