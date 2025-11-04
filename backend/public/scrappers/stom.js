@@ -39,7 +39,7 @@ function browserExtract(resolveStr, priceFnStr) {
     $$('#shopMainArea .p-price__offscreen') ||
     $$('#shopMainArea .p-price__price span') ||
     $$('[itemprop="price"]');
-  arr.push(priceFn(priceNode?.textContent || priceNode?.content || '')); // index 4
+  arr.push(priceFn(priceNode?.textContent || priceNode?.content || null)); // index 4
 
   arr.push('');  
 
@@ -53,42 +53,98 @@ function browserExtract(resolveStr, priceFnStr) {
 
 async function getSTOMlen() {
   const browser = await launchBrowser();
-  const page    = await browser.newPage();
-  page.setDefaultNavigationTimeout(0);
+  try {
+    const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(60000);
 
-  await page.goto(
-    'https://otakumode.com/shop/new_items?category=figures-dolls',
-    { waitUntil: 'networkidle0' }
-  );
+    await page.goto(
+      'https://otakumode.com/shop/new_items?category=figures-dolls',
+      { waitUntil: 'networkidle0' }
+    );
 
-  const len = await page.evaluate(() => {
-    const nums = Array.from(
-      document.querySelectorAll('nav.pagination a, ul.pagination li a')
-    )
-      .map(a => parseInt(a.textContent.trim(), 10))
-      .filter(Boolean);
-    return nums.length ? Math.max(...nums) : 1;
-  });
+    const len = await page.evaluate(() => {
+      const nums = Array.from(
+        document.querySelectorAll('nav.pagination a, ul.pagination li a')
+      )
+        .map(a => parseInt(a.textContent.trim(), 10))
+        .filter(Boolean);
+      return nums.length ? Math.max(...nums) : 1;
+    });
 
-  await browser.close();
-  return len;
+    return len;
+  } catch (error) {
+    console.error('Error getting STOM length:', error);
+    return 1;
+  } finally {
+    await browser.close();
+  }
 }
 
 async function scrapeTOM() {
   const browser = await launchBrowser();
-  const page    = await browser.newPage();
-  page.setDefaultNavigationTimeout(0);
+  try {
+    const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(60000);
 
-  const totalPages   = await getSTOMlen();
-  const allProducts  = [];
+    const totalPages = await getSTOMlen();
+    const allProducts = [];
 
-  for (let z = 1; z <= totalPages; z++) {
-    console.log(z);   // same as original
+    for (let z = 1; z <= totalPages; z++) {
+      try {
+        console.log(z);   // same as original
 
-    await page.goto(
-      `https://otakumode.com/shop/new_items?category=figures-dolls&page=${z}`,
-      { waitUntil: 'networkidle0' }
-    );
+        await page.goto(
+          `https://otakumode.com/shop/new_items?category=figures-dolls&page=${z}`,
+          { waitUntil: 'networkidle0' }
+        );
+
+        const productLinks = await page.evaluate(() =>
+          Array.from(
+            document.querySelectorAll(
+              'a.p-product-list__thumb,a.c-product__thumb,a[href*="/products/"]'
+            )
+          ).map(a => a.href)
+        );
+
+        for (const url of productLinks) {
+          try {
+            await page.goto(url, { waitUntil: 'networkidle0' });
+
+            const product = await page.evaluate(
+              browserExtract,
+              resolveImg.toString(),
+              cleanPrice.toString()
+            );
+            product.splice(3, 0, url); // insert URL at index 3
+
+            console.log(product);      // same as original
+            allProducts.push(product);
+          } catch (error) {
+            console.error(`Error scraping product ${url}:`, error);
+            // Skip this product
+          }
+        }
+      } catch (error) {
+        console.error(`Error scraping STOM page ${z}:`, error);
+        // Skip this page
+      }
+    }
+
+    return allProducts;
+  } finally {
+    await browser.close();
+  }
+}
+
+async function scrapeTOMVari(pageNum) {
+  const browser = await launchBrowser();
+  try {
+    const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(60000);
+
+    const pageURL =
+      `https://otakumode.com/shop/new_items?category=figures-dolls&page=${pageNum}`;
+    await page.goto(pageURL, { waitUntil: 'networkidle0' });
 
     const productLinks = await page.evaluate(() =>
       Array.from(
@@ -98,56 +154,30 @@ async function scrapeTOM() {
       ).map(a => a.href)
     );
 
+    const results = [];
     for (const url of productLinks) {
-      await page.goto(url, { waitUntil: 'networkidle0' });
-
-      const product = await page.evaluate(
-        browserExtract,
-        resolveImg.toString(),
-        cleanPrice.toString()
-      );
-      product.splice(3, 0, url); // insert URL at index 3
-
-      console.log(product);      // same as original
-      allProducts.push(product);
+      try {
+        await page.goto(url, { waitUntil: 'networkidle0' });
+        const product = await page.evaluate(
+          browserExtract,
+          resolveImg.toString(),
+          cleanPrice.toString()
+        );
+        product.splice(3, 0, url);
+        results.push(product);
+      } catch (error) {
+        console.error(`Error scraping product ${url}:`, error);
+        // Skip this product
+      }
     }
+
+    return results;
+  } catch (error) {
+    console.error(`Error scraping STOM page ${pageNum}:`, error);
+    return [];
+  } finally {
+    await browser.close();
   }
-
-  await browser.close();
-  return allProducts;
-}
-
-async function scrapeTOMVari(pageNum) {
-  const browser = await launchBrowser();
-  const page    = await browser.newPage();
-  page.setDefaultNavigationTimeout(0);
-
-  const pageURL =
-    `https://otakumode.com/shop/new_items?category=figures-dolls&page=${pageNum}`;
-  await page.goto(pageURL, { waitUntil: 'networkidle0' });
-
-  const productLinks = await page.evaluate(() =>
-    Array.from(
-      document.querySelectorAll(
-        'a.p-product-list__thumb,a.c-product__thumb,a[href*="/products/"]'
-      )
-    ).map(a => a.href)
-  );
-
-  const results = [];
-  for (const url of productLinks) {
-    await page.goto(url, { waitUntil: 'networkidle0' });
-    const product = await page.evaluate(
-      browserExtract,
-      resolveImg.toString(),
-      cleanPrice.toString()
-    );
-    product.splice(3, 0, url);
-    results.push(product);
-  }
-
-  await browser.close();
-  return results;
 }
 
 module.exports = { scrapeTOM, getSTOMlen, scrapeTOMVari };
