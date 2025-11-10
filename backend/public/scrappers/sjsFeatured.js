@@ -83,4 +83,4 @@ async function scrapeSJSFeatured() {
 
 module.exports = { scrapeSJSFeatured };
 
-scrapeSJSFeatured()
+// scrapeSJSFeatured()

@@ -5,6 +5,7 @@ import { useSearchParams }             from "react-router-dom";
 import Checkbox                         from "@mui/material/Checkbox";
 import Pagination                       from "@mui/material/Pagination";
 import { fetchStoreCounts, fetchSearchResults } from './service';
+import { loadConfig, formatStoreName } from '../helpers';
 import "./searchresults.css";
 import ProductCard                      from "../ProductCard";
 
@@ -13,24 +14,34 @@ export default function SearchResults() {
 
   // Extracted params for stable deps
   const query    = searchParams.get("query")   || "";
-  const filters  = searchParams.get("filters") || "00";
   const preorder = searchParams.get("preorder");
   const preowned = searchParams.get("preowned");
   const sortVal  = searchParams.get("sort$");
 
-  // State
-  const [countSolaris, setCountSolaris] = useState(0);
-  const [countTOM,     setCountTOM]     = useState(0);
-  const [results,      setResults]      = useState([]);
-  const [currentPage,  setCurrentPage]  = useState(1);
+  // Load stores from config
+  const [stores, setStores] = useState([]);
 
-  // 1) Fetch store counts when `query` changes
+  // Dynamic state
+  const [counts, setCounts] = useState({});
+  const [results, setResults] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState("00");
+
+  // Load config on mount
   useEffect(() => {
-    fetchStoreCounts(query).then(counts => {
-      setCountSolaris(counts.solaris);
-      setCountTOM(counts.tom);
-    });
-  }, [query]);
+    loadConfig().then(config => setStores(config.stores || []));
+  }, []);
+
+  // Initialize counts and filters when stores load
+  useEffect(() => {
+    if (stores.length > 0) {
+      const initialCounts = stores.reduce((acc, store) => ({ ...acc, [store]: 0 }), {});
+      setCounts(initialCounts);
+      const urlFilters = searchParams.get("filters");
+      const defaultFilters = '0'.repeat(stores.length);
+      setFilters(urlFilters && urlFilters.length === stores.length ? urlFilters : defaultFilters);
+    }
+  }, [stores, searchParams]);
 
   // 2) Fetch results whenever any filter/sort param changes
   useEffect(() => {
@@ -41,6 +52,12 @@ export default function SearchResults() {
 
     fetchSearchResults(params).then(results => {
       setResults(results);
+      // Compute counts from results
+      const newCounts = results.reduce((acc, p) => {
+        acc[p.website] = (acc[p.website] || 0) + 1;
+        return acc;
+      }, {});
+      setCounts(newCounts);
       setCurrentPage(1);
     });
   }, [query, filters, preorder, preowned, sortVal]);
@@ -61,13 +78,12 @@ export default function SearchResults() {
   };
 
   // Handlers
-  const handleStoreFilter = (storeKey) => {
-    const cur = filters;
-    const updated =
-      storeKey === "SolarisJapanCheck"
-        ? (cur[0] === "0" ? "1"+cur[1] : "0"+cur[1])
-        : (cur[1] === "0" ? cur[0]+"1" : cur[0]+"0");
-    setParam("filters", updated);
+  const handleStoreFilter = (index) => {
+    const newFilters = filters.split('');
+    newFilters[index] = newFilters[index] === '0' ? '1' : '0';
+    const updatedFilters = newFilters.join('');
+    setFilters(updatedFilters);
+    setParam("filters", updatedFilters);
   };
 
   const handlePreorderFilter = () =>
@@ -84,23 +100,16 @@ export default function SearchResults() {
       <aside className="filterContainer">
         <div className="filterTitle">Select Store</div>
 
-        <div className="filterItem">
-          <Checkbox
-            style={{ color: "var(--clr-primary)" }}
-            checked={filters[0] === "1"}
-            onChange={() => handleStoreFilter("SolarisJapanCheck")}
-          />
-          Solaris Japan ({countSolaris})
-        </div>
-
-        <div className="filterItem">
-          <Checkbox
-            style={{ color: "var(--clr-primary)" }}
-            checked={filters[1] === "1"}
-            onChange={() => handleStoreFilter("TokyoOtakuModeCheck")}
-          />
-          Tokyo Otaku Mode ({countTOM})
-        </div>
+        {stores.map((store, index) => (
+          <div className="filterItem" key={store}>
+            <Checkbox
+              style={{ color: "var(--clr-primary)" }}
+              checked={filters[index] === "1"}
+              onChange={() => handleStoreFilter(index)}
+            />
+            {formatStoreName(store)} ({counts[store] || 0})
+          </div>
+        ))}
 
         <div className="filterTitle">Condition</div>
 

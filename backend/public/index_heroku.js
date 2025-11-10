@@ -229,7 +229,7 @@ async function scrape() {
 
 app.listen(process.env.PORT || 4000, () => {
   console.log(`Example app listening on ${""}`)
-  setInterval(scrapeFeatured, 1500000)
+  // setInterval(scrapeFeatured, 1500000)
 })
 /* 
 Run scrape() locally

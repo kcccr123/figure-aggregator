@@ -1,6 +1,7 @@
 import {useEffect,useState} from "react";
 import { Link ,createSearchParams } from "react-router-dom";
 import { fetchFeaturedItems } from './service';
+import { formatStoreName } from '../helpers';
 
 import ProductCard from "../ProductCard";
 import solaris from '../images/SolarisFiller.png';
@@ -8,20 +9,24 @@ import tokyo   from '../images/tokyoOtakuMode2.jpg';
 import './home.css';
 
 export default function HomePage(){
-  const [featuredSolaris,setFeaturedSolaris] = useState([]);
-  const [featuredTOM,setFeaturedTOM]         = useState([]);
+  const [featuredItems, setFeaturedItems] = useState({});
+
+  const storeFilters = { SolarisJapan: '10', TokyoOtakuMode: '01' };
 
   function deseralizeImages(str){
     return str.split(">>><<<");
   }
 
   useEffect(()=>{
-    fetchFeaturedItems("SolarisJapan").then(data =>
-      setFeaturedSolaris(data.map(it => ({ ...it, images: deseralizeImages(it.images.toString()) })))
-    );
-    fetchFeaturedItems("TokyoOtakuMode").then(data =>
-      setFeaturedTOM(data.map(it => ({ ...it, images: deseralizeImages(it.images.toString()) })))
-    );
+    fetchFeaturedItems().then(data => {
+      const grouped = {};
+      data.forEach(item => {
+        const store = item.website;
+        if (!grouped[store]) grouped[store] = [];
+        grouped[store].push({ ...item, images: deseralizeImages(item.image) });
+      });
+      setFeaturedItems(grouped);
+    });
   },[]);
 
   return(
@@ -36,27 +41,20 @@ export default function HomePage(){
       </section>
 
       <section className="showcase">
-        <h2 className="section-heading">Featured – Solaris Japan</h2>
-        <div className="cards-grid">
-          {featuredSolaris.map(p=><ProductCard key={p.name} product={p}/>)}
-        </div>
-        <Link
-          to={"/search?"+createSearchParams({query:"",filters:"10"}).toString()}
-          className="navbar__link show-more"
-        >
-          More from Solaris Japan
-        </Link>
-
-        <h2 className="section-heading">Featured – Tokyo Otaku Mode</h2>
-        <div className="cards-grid">
-          {featuredTOM.map(p=><ProductCard key={p.name} product={p}/>)}
-        </div>
-        <Link
-          to={"/search?"+createSearchParams({query:"",filters:"01"}).toString()}
-          className="navbar__link show-more"
-        >
-          More from TOM
-        </Link>
+        {Object.entries(featuredItems).map(([store, items]) => (
+          <div key={store}>
+            <h2 className="section-heading">Featured – {formatStoreName(store)}</h2>
+            <div className="cards-grid">
+              {items.map(p => <ProductCard key={p.name} product={p} />)}
+            </div>
+            <Link
+              to={"/search?" + createSearchParams({query:"", filters: storeFilters[store]}).toString()}
+              className="navbar__link show-more"
+            >
+              More from {formatStoreName(store)}
+            </Link>
+          </div>
+        ))}
       </section>
     </>
   );

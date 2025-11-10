@@ -1,9 +1,4 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '..', '.env') });
-
-const scrapeJS = require('./scrappers/sjs.js');
-const scrapeTOM = require('./scrappers/stom.js');
-const scrapeSJSFeatured = require('./scrappers/sjsFeatured.js');
-const scrapeSTOMFeatured = require('./scrappers/stomFeatured.js');
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
@@ -81,9 +76,8 @@ figuresRouter.get('/numInStore', async (req, res) => {
  * GET /figures/featuredItems
  */
 figuresRouter.get('/featuredItems', async (req, res) => {
-  const store = req.query.store?.trim() || '';
   try {
-    const rows = await query.getFeaturedItems(db, store);
+    const rows = await query.getFeaturedItems(db);
     res.send(rows);
   } catch (e) {
     res.status(500).send({ error: 'DB error' });

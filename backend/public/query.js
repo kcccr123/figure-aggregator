@@ -1,25 +1,42 @@
 const mysql = require('mysql2/promise');
+const fs = require('fs');
+const path = require('path');
+const yaml = require('js-yaml');
+
+// Load config
+const configPath = path.join(__dirname, '..', 'config.yaml');
+const config = yaml.load(fs.readFileSync(configPath, 'utf8'));
 
 module.exports.insertProduct = async (db, name, image, website, url, price, preowned, rel) => {
+  // Convert empty strings to null for DECIMAL columns
+  const cleanPrice = price === '' ? null : price;
+  const cleanPreowned = preowned === '' ? null : preowned;
+  const cleanRel = rel === '' ? null : rel;
+  
+  const connection = await db.getConnection();
   try {
-    await db.query(
+    await connection.beginTransaction();
+    
+    await connection.query(
       `INSERT INTO products (name,image,website,url)
        VALUES (?,?,?,?)
        ON DUPLICATE KEY UPDATE image=VALUES(image),website=VALUES(website),url=VALUES(url)`,
       [name, image, website, url]
     );
-  } catch (error) {
-    console.error('Error inserting into products:', error);
-  }
-  try {
-    await db.query(
+    
+    await connection.query(
       `INSERT INTO productprices (name,price,preowned,rel)
        VALUES (?,?,?,?)
        ON DUPLICATE KEY UPDATE price=VALUES(price),preowned=VALUES(preowned),rel=VALUES(rel)`,
-      [name, price, preowned, rel]
+      [name, cleanPrice, cleanPreowned, cleanRel]
     );
+    
+    await connection.commit();
   } catch (error) {
-    console.error('Error inserting into productprices:', error);
+    await connection.rollback();
+    console.error('Error inserting product:', error);
+  } finally {
+    connection.release();
   }
 };
 
@@ -41,7 +58,7 @@ module.exports.getSearchResults = async (db, term, filters, sort$, ordert, onlyP
   if (term) where.push(`p.name LIKE ${db.escape('%' + term + '%')}`);
 
   // store filters
-  const map = ['SolarisJapan', 'TokyoOtakuMode'];
+  const map = config.stores;
   const sites = [...filters]
     .map((b, i) => b === '1' ? map[i] : null)
     .filter(Boolean);
@@ -65,9 +82,14 @@ module.exports.getSearchResults = async (db, term, filters, sort$, ordert, onlyP
   if (onlyPre) where.push("(pp.rel IS NOT NULL AND pp.rel <> '')");
   if (onlyUsed) where.push("(pp.preowned IS NOT NULL AND pp.preowned <> '')");
 
+  // Filter out sold out when sorting by price
+  if (sort$ === 'high' || sort$ === 'low') {
+    where.push("(pp.price IS NOT NULL AND pp.price != '' OR pp.preowned IS NOT NULL AND pp.preowned != '')");
+  }
+
   if (where.length) sql += ' WHERE ' + where.join(' AND ');
-  if (sort$ === 'high') sql += ' ORDER BY pp.price DESC';
-  else if (sort$ === 'low') sql += ' ORDER BY pp.price ASC';
+  if (sort$ === 'high') sql += ' ORDER BY COALESCE(pp.price, pp.preowned) DESC';
+  else if (sort$ === 'low') sql += ' ORDER BY COALESCE(pp.price, pp.preowned) ASC';
 
   const [rows] = await db.query(sql);
   return rows;
@@ -83,15 +105,19 @@ module.exports.getNumInStore = async (db, name, term) => {
   return rows;
 };
 
-module.exports.getFeaturedItems = async (db, store) => {
+module.exports.getFeaturedItems = async (db) => {
   const sql = `
-    SELECT name, image, website, url, inserted_timestamp_utc
-    FROM products
-    WHERE website = ?
-    ORDER BY inserted_timestamp_utc DESC
-    LIMIT 10
+    SELECT name, image, website, url, timestamp_utc, price
+    FROM (
+      SELECT p.*, pp.price, ROW_NUMBER() OVER (PARTITION BY p.website ORDER BY p.timestamp_utc DESC) AS rn
+      FROM products p
+      JOIN productprices pp ON p.name = pp.name
+      WHERE pp.price IS NOT NULL AND pp.price != ''
+    ) t
+    WHERE rn <= 5
+    ORDER BY website, timestamp_utc DESC
   `;
-  const [rows] = await db.query(sql, [store]);
+  const [rows] = await db.query(sql);
   return rows;
 };
 
