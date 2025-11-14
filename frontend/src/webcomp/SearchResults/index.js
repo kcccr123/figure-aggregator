@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams }             from "react-router-dom";
 import Checkbox                         from "@mui/material/Checkbox";
 import Pagination                       from "@mui/material/Pagination";
+import CircularProgress                 from "@mui/material/CircularProgress";
 import { fetchSearchResults } from './service';
 import { loadConfig, formatStoreName } from '../helpers';
 import "./searchresults.css";
@@ -27,6 +28,7 @@ export default function SearchResults() {
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState("00");
   const [pageSize, setPageSize] = useState(40);
+  const [loading, setLoading] = useState(false);
 
   // Load config on mount
   useEffect(() => {
@@ -51,6 +53,7 @@ export default function SearchResults() {
     if (preowned) params.preowned = preowned;
     if (sortVal)  params["sort$"] = sortVal;
 
+    setLoading(true);
     fetchSearchResults(params).then(results => {
       setResults(results);
       // Compute counts from results
@@ -60,7 +63,8 @@ export default function SearchResults() {
       }, {});
       setCounts(newCounts);
       setCurrentPage(1);
-    });
+      setLoading(false);
+    }).catch(() => setLoading(false));
   }, [query, filters, preorder, preowned, sortVal]);
 
   // Pagination
@@ -179,35 +183,43 @@ export default function SearchResults() {
         </div>
         <hr className="searchLine" />
 
-        <div className="innerAlignment">
-          {pages[currentPage - 1]?.map(p => (
-            <ProductCard
-              key={p.url}
-              product={{
-                images:  [p.image],
-                name:    p.name,
-                price:   p.price,
-                preorder:p.preorder,
-                preowned:p.preowned,
-                rel:     p.rel,
-                website: p.website,
-                url:     p.url
-              }}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem', minHeight: '400px' }}>
+            <CircularProgress style={{ color: 'var(--clr-primary)' }} size={60} />
+          </div>
+        ) : (
+          <>
+            <div className="innerAlignment">
+              {pages[currentPage - 1]?.map(p => (
+                <ProductCard
+                  key={p.url}
+                  product={{
+                    images:  [p.image],
+                    name:    p.name,
+                    price:   p.price,
+                    preorder:p.preorder,
+                    preowned:p.preowned,
+                    rel:     p.rel,
+                    website: p.website,
+                    url:     p.url
+                  }}
+                />
+              ))}
+            </div>
 
-        {pages.length > 1 && (
-          <Pagination
-            className="pagination"
-            page={currentPage}
-            count={pages.length}
-            onChange={(_, p) => {
-              setCurrentPage(p);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            sx={{ "& .Mui-selected": { bgcolor: "var(--clr-primary)!important", color: "#fff" } }}
-          />
+            {pages.length > 1 && (
+              <Pagination
+                className="pagination"
+                page={currentPage}
+                count={pages.length}
+                onChange={(_, p) => {
+                  setCurrentPage(p);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                sx={{ "& .Mui-selected": { bgcolor: "var(--clr-primary)!important", color: "#fff" } }}
+              />
+            )}
+          </>
         )}
       </main>
     </div>

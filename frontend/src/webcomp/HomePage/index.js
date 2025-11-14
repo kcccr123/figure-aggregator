@@ -1,5 +1,6 @@
 import {useEffect,useState} from "react";
 import { Link ,createSearchParams } from "react-router-dom";
+import CircularProgress from "@mui/material/CircularProgress";
 import { fetchFeaturedItems } from './service';
 import { formatStoreName } from '../helpers';
 import yaml from 'js-yaml';
@@ -12,6 +13,7 @@ import './home.css';
 export default function HomePage(){
   const [featuredItems, setFeaturedItems] = useState({});
   const [stores, setStores] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const generateStoreFilter = (targetStore) => {
     return stores.map(store => store === targetStore ? '1' : '0').join('');
@@ -30,6 +32,7 @@ export default function HomePage(){
         setStores(config.stores || []);
       })
     // Fetch featured items
+    setLoading(true);
     fetchFeaturedItems().then(data => {
       const grouped = {};
       data.forEach(item => {
@@ -38,7 +41,8 @@ export default function HomePage(){
         grouped[store].push({ ...item, images: deseralizeImages(item.image) });
       });
       setFeaturedItems(grouped);
-    });
+      setLoading(false);
+    }).catch(() => setLoading(false));
   },[]);
 
   return(
@@ -53,18 +57,24 @@ export default function HomePage(){
       </section>
 
       <section className="showcase">
-        {Object.entries(featuredItems).map(([store, items]) => (
-          <div key={store} className="store-section">
-            <h2 className="section-heading">{formatStoreName(store)}</h2>
-            <FeaturedCarousel items={items} />
-            <Link
-              to={"/search?" + createSearchParams({query:"", filters: generateStoreFilter(store)}).toString()}
-              className="navbar__link show-more"
-            >
-              More from {formatStoreName(store)}
-            </Link>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+            <CircularProgress style={{ color: 'var(--clr-primary)' }} size={60} />
           </div>
-        ))}
+        ) : (
+          Object.entries(featuredItems).map(([store, items]) => (
+            <div key={store} className="store-section">
+              <h2 className="section-heading">{formatStoreName(store)}</h2>
+              <FeaturedCarousel items={items} />
+              <Link
+                to={"/search?" + createSearchParams({query:"", filters: generateStoreFilter(store)}).toString()}
+                className="navbar__link show-more"
+              >
+                More from {formatStoreName(store)}
+              </Link>
+            </div>
+          ))
+        )}
       </section>
     </>
   );
