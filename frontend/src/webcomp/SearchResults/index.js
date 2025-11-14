@@ -26,6 +26,7 @@ export default function SearchResults() {
   const [results, setResults] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState("00");
+  const [pageSize, setPageSize] = useState(40);
 
   // Load config on mount
   useEffect(() => {
@@ -63,7 +64,6 @@ export default function SearchResults() {
   }, [query, filters, preorder, preowned, sortVal]);
 
   // Pagination
-  const pageSize = 40;
   const pages = [];
   for (let i = 0; i < results.length; i += pageSize) {
     pages.push(results.slice(i, i + pageSize));
@@ -94,6 +94,11 @@ export default function SearchResults() {
 
   const handleSortChange = (e) =>
     setParam("sort$", e.target.value);
+
+  const handlePageSizeChange = (e) => {
+    setPageSize(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
 
   return (
     <div className="searchContainer">
@@ -145,6 +150,25 @@ export default function SearchResults() {
             <option value="">None</option>
             <option value="high">High → Low</option>
             <option value="low">Low → High</option>
+          </select>
+        </div>
+
+        <div className="filterTitle">Items per Page</div>
+        <div className="filterItem">
+          <select
+            value={pageSize}
+            onChange={handlePageSizeChange}
+            style={{
+              width: "100%", padding: "0.5rem",
+              borderRadius: "var(--radius)",
+              border: "1px solid var(--clr-secondary)"
+            }}
+          >
+            <option value="20">20</option>
+            <option value="40">40</option>
+            <option value="60">60</option>
+            <option value="80">80</option>
+            <option value="100">100</option>
           </select>
         </div>
       </aside>

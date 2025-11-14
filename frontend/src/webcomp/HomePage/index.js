@@ -47,7 +47,7 @@ export default function HomePage(){
         <img src={solaris} alt="Solaris Japan banner"/>
         <img src={tokyo}   alt="Tokyo Otaku Mode banner"/>
         <div className="hero__title">
-          <h1>Your One‑Stop Figure Tracker</h1>
+          <h1>Your One‑Stop Model Shop</h1>
           <p>Compare prices & release dates from Popular stores.</p>
         </div>
       </section>
