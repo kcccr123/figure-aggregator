@@ -12,7 +12,6 @@
 
 const { launchBrowser } = require('./_browser');
 
-/* ───────────── Helpers ───────────── */
 const clean = t => (t || '').replace(/[^\d.]/g, '').trim();
 
 /**
@@ -29,7 +28,7 @@ async function extractFromPage(page) {
       const image = card.querySelector('img')?.src || '';
       const url   = card.querySelector('a')?.href || '';
 
-      let price = '', preOwned = '', rel = '';
+      let price = null, preOwned = '', rel = '';
       const bn   = card.querySelector('.product-label--brand-new .money');
       const po   = card.querySelector('.product-label--pre-order .money');
       const pre  = card.querySelector('.product-label--pre-owned .money');
@@ -61,6 +60,9 @@ async function scrapeJSVari(pageNum = 1) {
     const data = await extractFromPage(page);
     console.log(`Page ${pageNum}:`, data);            // log each result array
     return data;
+  } catch (error) {
+    console.error(`Error scraping SJS page ${pageNum}:`, error);
+    return [];
   } finally {
     await browser.close();
   }
@@ -75,17 +77,22 @@ async function scrapeJS() {
     let pageNum = 1;
 
     while (true) {
-      await page.goto(
-        `https://solarisjapan.com/collections/figures?page=${pageNum}`,
-        { waitUntil: 'networkidle0' }
-      );
+      try {
+        await page.goto(
+          `https://solarisjapan.com/collections/figures?page=${pageNum}`,
+          { waitUntil: 'networkidle0' }
+        );
 
-      const results = await extractFromPage(page);
-      console.log(`Page ${pageNum}:`, results);        // log each page’s data
+        const results = await extractFromPage(page);
+        console.log(`Page ${pageNum}:`, results);        // log each page’s data
 
-      if (!results.length) break;                     // empty → we’re done
-      all.push(...results);
-      pageNum++;
+        if (!results.length) break;                     // empty → we’re done
+        all.push(...results);
+        pageNum++;
+      } catch (error) {
+        console.error(`Error scraping SJS page ${pageNum}:`, error);
+        break; // Stop on error
+      }
     }
     return all;
   } finally {
@@ -106,6 +113,9 @@ async function getSJSLength() {
       return nums.length ? Math.max(...nums) : 1;
     });
     return len;
+  } catch (error) {
+    console.error('Error getting SJS length:', error);
+    return 1;
   } finally {
     await browser.close();
   }

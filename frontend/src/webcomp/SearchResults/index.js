@@ -2,44 +2,47 @@
 
 import React, { useEffect, useState } from "react";
 import { useSearchParams }             from "react-router-dom";
-import Checkbox                         from "@material-ui/core/Checkbox";
+import Checkbox                         from "@mui/material/Checkbox";
 import Pagination                       from "@mui/material/Pagination";
-import axios                            from "axios";
+import { fetchStoreCounts, fetchSearchResults } from './service';
+import { loadConfig, formatStoreName } from '../helpers';
 import "./searchresults.css";
 import ProductCard                      from "../ProductCard";
-
-const BASE_URL  = process.env.REACT_APP_API_BASE_URL;
-const EP_SEARCH = process.env.REACT_APP_API_ENDPOINT_SEARCH;
-const EP_NUM    = process.env.REACT_APP_API_ENDPOINT_NUM_IN_STORE;
 
 export default function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Extracted params for stable deps
   const query    = searchParams.get("query")   || "";
-  const filters  = searchParams.get("filters") || "00";
   const preorder = searchParams.get("preorder");
   const preowned = searchParams.get("preowned");
   const sortVal  = searchParams.get("sort$");
 
-  // State
-  const [countSolaris, setCountSolaris] = useState(0);
-  const [countTOM,     setCountTOM]     = useState(0);
-  const [results,      setResults]      = useState([]);
-  const [currentPage,  setCurrentPage]  = useState(1);
+  // Load stores from config
+  const [stores, setStores] = useState([]);
 
-  // 1) Fetch store counts when `query` changes
+  // Dynamic state
+  const [counts, setCounts] = useState({});
+  const [results, setResults] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState("00");
+  const [pageSize, setPageSize] = useState(40);
+
+  // Load config on mount
   useEffect(() => {
-    axios
-      .get(`${BASE_URL}${EP_NUM}`, { params: { name: "SolarisJapan",   searchParem: query } })
-      .then(res => setCountSolaris(res.data[0]?.count || 0))
-      .catch(() => setCountSolaris(0));
+    loadConfig().then(config => setStores(config.stores || []));
+  }, []);
 
-    axios
-      .get(`${BASE_URL}${EP_NUM}`, { params: { name: "TokyoOtakuMode", searchParem: query } })
-      .then(res => setCountTOM(res.data[0]?.count || 0))
-      .catch(() => setCountTOM(0));
-  }, [query]);
+  // Initialize counts and filters when stores load
+  useEffect(() => {
+    if (stores.length > 0) {
+      const initialCounts = stores.reduce((acc, store) => ({ ...acc, [store]: 0 }), {});
+      setCounts(initialCounts);
+      const urlFilters = searchParams.get("filters");
+      const defaultFilters = '0'.repeat(stores.length);
+      setFilters(urlFilters && urlFilters.length === stores.length ? urlFilters : defaultFilters);
+    }
+  }, [stores, searchParams]);
 
   // 2) Fetch results whenever any filter/sort param changes
   useEffect(() => {
@@ -48,17 +51,19 @@ export default function SearchResults() {
     if (preowned) params.preowned = preowned;
     if (sortVal)  params["sort$"] = sortVal;
 
-    axios
-      .get(`${BASE_URL}${EP_SEARCH}`, { params })
-      .then(res => {
-        setResults(res.data);
-        setCurrentPage(1);
-      })
-      .catch(() => setResults([]));
+    fetchSearchResults(params).then(results => {
+      setResults(results);
+      // Compute counts from results
+      const newCounts = results.reduce((acc, p) => {
+        acc[p.website] = (acc[p.website] || 0) + 1;
+        return acc;
+      }, {});
+      setCounts(newCounts);
+      setCurrentPage(1);
+    });
   }, [query, filters, preorder, preowned, sortVal]);
 
   // Pagination
-  const pageSize = 40;
   const pages = [];
   for (let i = 0; i < results.length; i += pageSize) {
     pages.push(results.slice(i, i + pageSize));
@@ -73,13 +78,12 @@ export default function SearchResults() {
   };
 
   // Handlers
-  const handleStoreFilter = (storeKey) => {
-    const cur = filters;
-    const updated =
-      storeKey === "SolarisJapanCheck"
-        ? (cur[0] === "0" ? "1"+cur[1] : "0"+cur[1])
-        : (cur[1] === "0" ? cur[0]+"1" : cur[0]+"0");
-    setParam("filters", updated);
+  const handleStoreFilter = (index) => {
+    const newFilters = filters.split('');
+    newFilters[index] = newFilters[index] === '0' ? '1' : '0';
+    const updatedFilters = newFilters.join('');
+    setFilters(updatedFilters);
+    setParam("filters", updatedFilters);
   };
 
   const handlePreorderFilter = () =>
@@ -91,28 +95,26 @@ export default function SearchResults() {
   const handleSortChange = (e) =>
     setParam("sort$", e.target.value);
 
+  const handlePageSizeChange = (e) => {
+    setPageSize(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
   return (
     <div className="searchContainer">
       <aside className="filterContainer">
         <div className="filterTitle">Select Store</div>
 
-        <div className="filterItem">
-          <Checkbox
-            style={{ color: "var(--clr-primary)" }}
-            checked={filters[0] === "1"}
-            onChange={() => handleStoreFilter("SolarisJapanCheck")}
-          />
-          Solaris Japan ({countSolaris})
-        </div>
-
-        <div className="filterItem">
-          <Checkbox
-            style={{ color: "var(--clr-primary)" }}
-            checked={filters[1] === "1"}
-            onChange={() => handleStoreFilter("TokyoOtakuModeCheck")}
-          />
-          Tokyo Otaku Mode ({countTOM})
-        </div>
+        {stores.map((store, index) => (
+          <div className="filterItem" key={store}>
+            <Checkbox
+              style={{ color: "var(--clr-primary)" }}
+              checked={filters[index] === "1"}
+              onChange={() => handleStoreFilter(index)}
+            />
+            {formatStoreName(store)} ({counts[store] || 0})
+          </div>
+        ))}
 
         <div className="filterTitle">Condition</div>
 
@@ -148,6 +150,25 @@ export default function SearchResults() {
             <option value="">None</option>
             <option value="high">High → Low</option>
             <option value="low">Low → High</option>
+          </select>
+        </div>
+
+        <div className="filterTitle">Items per Page</div>
+        <div className="filterItem">
+          <select
+            value={pageSize}
+            onChange={handlePageSizeChange}
+            style={{
+              width: "100%", padding: "0.5rem",
+              borderRadius: "var(--radius)",
+              border: "1px solid var(--clr-secondary)"
+            }}
+          >
+            <option value="20">20</option>
+            <option value="40">40</option>
+            <option value="60">60</option>
+            <option value="80">80</option>
+            <option value="100">100</option>
           </select>
         </div>
       </aside>
