@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams }             from "react-router-dom";
 import Checkbox                         from "@mui/material/Checkbox";
 import Pagination                       from "@mui/material/Pagination";
-import { fetchStoreCounts, fetchSearchResults } from './service';
+import { fetchSearchResults } from './service';
 import { loadConfig, formatStoreName } from '../helpers';
 import "./searchresults.css";
 import ProductCard                      from "../ProductCard";
