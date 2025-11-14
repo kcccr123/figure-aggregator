@@ -7,36 +7,75 @@ const yaml = require('js-yaml');
 const configPath = path.join(__dirname, '..', 'config.yaml');
 const config = yaml.load(fs.readFileSync(configPath, 'utf8'));
 
+// Helper function to add timeout to promises
+function withTimeout(promise, timeoutMs = 30000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+}
+
 module.exports.insertProduct = async (db, name, image, website, url, price, preowned, rel) => {
   // Convert empty strings to null for DECIMAL columns
   const cleanPrice = price === '' ? null : price;
   const cleanPreowned = preowned === '' ? null : preowned;
   const cleanRel = rel === '' ? null : rel;
   
-  const connection = await db.getConnection();
+  let connection;
+  const startTime = Date.now();
+  
   try {
-    await connection.beginTransaction();
+    // Add timeout to connection acquisition
+    connection = await withTimeout(db.getConnection(), 10000);
+    const connTime = Date.now() - startTime;
+    if (connTime > 2000) {
+      console.warn(`⚠️  Slow connection acquisition: ${connTime}ms for "${name}"`);
+    }
     
-    await connection.query(
+    await withTimeout(connection.beginTransaction(), 5000);
+    
+    const [result1] = await withTimeout(connection.query(
       `INSERT INTO products (name,image,website,url)
        VALUES (?,?,?,?)
        ON DUPLICATE KEY UPDATE image=VALUES(image),website=VALUES(website),url=VALUES(url)`,
       [name, image, website, url]
-    );
+    ), 10000);
     
-    await connection.query(
+    const [result2] = await withTimeout(connection.query(
       `INSERT INTO productprices (name,price,preowned,rel)
        VALUES (?,?,?,?)
        ON DUPLICATE KEY UPDATE price=VALUES(price),preowned=VALUES(preowned),rel=VALUES(rel)`,
       [name, cleanPrice, cleanPreowned, cleanRel]
-    );
+    ), 10000);
     
-    await connection.commit();
+    await withTimeout(connection.commit(), 5000);
+    
+    const totalTime = Date.now() - startTime;
+    if (totalTime > 5000) {
+      console.warn(`⚠️  Slow insert: ${totalTime}ms for "${name}"`);
+    }
+    
+    // Return true if this was a new insert (affectedRows = 1 for insert, 2 for update)
+    // If either table had a new insert, consider it a new product
+    const wasNew = result1.affectedRows === 1 || result2.affectedRows === 1;
+    return { wasNew, affectedRows1: result1.affectedRows, affectedRows2: result2.affectedRows };
   } catch (error) {
-    await connection.rollback();
-    console.error('Error inserting product:', error);
+    if (connection) {
+      try {
+        await withTimeout(connection.rollback(), 5000);
+      } catch (rollbackError) {
+        console.error('❌ Error rolling back transaction:', rollbackError.message);
+      }
+    }
+    console.error(`❌ Error inserting product "${name}":`, error.message);
+    console.error(`   Error type: ${error.code}, SQL State: ${error.sqlState}`);
+    throw error; // Re-throw so caller knows it failed
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 };
 
@@ -114,7 +153,7 @@ module.exports.getFeaturedItems = async (db) => {
       JOIN productprices pp ON p.name = pp.name
       WHERE pp.price IS NOT NULL AND pp.price != ''
     ) t
-    WHERE rn <= 5
+    WHERE rn <= 10
     ORDER BY website, timestamp_utc DESC
   `;
   const [rows] = await db.query(sql);

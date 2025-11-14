@@ -55,7 +55,7 @@ export default function HomePage(){
       <section className="showcase">
         {Object.entries(featuredItems).map(([store, items]) => (
           <div key={store} className="store-section">
-            <h2 className="section-heading">Featured – {formatStoreName(store)}</h2>
+            <h2 className="section-heading">{formatStoreName(store)}</h2>
             <FeaturedCarousel items={items} />
             <Link
               to={"/search?" + createSearchParams({query:"", filters: generateStoreFilter(store)}).toString()}

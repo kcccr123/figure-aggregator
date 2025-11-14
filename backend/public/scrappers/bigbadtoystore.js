@@ -3,65 +3,84 @@ const { launchBrowser } = require('./_browser');
 const cleanPrice = txt => (txt || '').replace(/[^\d.]/g, '');
 
 /**
- * Extract product data from the *current* product page object.
- *   page   – puppeteer Page already positioned on the product page
- *   return – array of [name, image, 'BigBadToyStore', url, price, preowned, rel]
+ * Scrape BBTS search page directly without visiting individual product pages
  */
-async function extractFromProductPage(page) {
-  return page.evaluate(() => {
-    const cleanPrice = txt => (txt || '').replace(/[^\d.]/g, '');
-    const name = document.querySelector('h1.product-name-ada')?.textContent.trim() || '';
-    const image = document.querySelector('#img0')?.src || '';
-    const priceText = document.querySelector('.price')?.textContent.trim() || '';
-    const price = cleanPrice(priceText);
-    const preowned = '';
-    const rel = document.querySelector('.preorder-arrival strong')?.textContent.trim() || '';
-
-    return [name, image, 'BigBadToyStore', window.location.href, price, preowned, rel];
-  });
-}
-
 async function scrapeBBTSVari(pageNum = 1) {
-  console.log(`Launching browser for page ${pageNum}...`);
+  console.log(`Launching browser for BBTS page ${pageNum}...`);
   const browser = await launchBrowser();
-  console.log('Browser launched.');
+  
   try {
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(60000);
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36');
-    await page.setViewport({ width: 1280, height: 720 });
-    console.log('Page created.');
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setViewport({ width: 1920, height: 1080 });
 
     const searchUrl = `https://www.bigbadtoystore.com/Search?HideInStock=false&HidePreorder=false&HideSoldOut=false&InventoryStatus=i,p,so&PageSize=20&SortOrder=New&Department=43623&PageIndex=${pageNum}`;
-    console.log(`Going to ${searchUrl}...`);
-    await page.goto(searchUrl, { waitUntil: 'networkidle0' });
-    console.log('Page loaded.');
+    console.log(`Navigating to: ${searchUrl}`);
+    
+    await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 60000 });
+    await page.waitForTimeout(2000); // Wait for page to fully load
+    
+    console.log('Extracting products from search page...');
 
-    const productLinks = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('a.product-card')).map(a => a.href)
-    );
-    const uniqueLinks = [...new Set(productLinks)];
-    console.log(`Found ${productLinks.length} product links.`);
+    // Extract all product data directly from the search page
+    const products = await page.evaluate(() => {
+      const cleanPrice = txt => (txt || '').replace(/[^\d.]/g, '');
+      const results = [];
+      
+      // Find all product cards (try multiple selectors)
+      const productCards = document.querySelectorAll('a.product-card, .product-card, [class*="product-card"]');
+      
+      productCards.forEach(card => {
+        try {
+          // Get product URL
+          const url = card.href || card.querySelector('a')?.href || '';
+          if (!url) return;
+          
+          // Get product name
+          const nameEl = card.querySelector('.product-name, [class*="product-name"], h3, h4, .title');
+          const name = nameEl ? nameEl.textContent.trim() : '';
+          if (!name) return;
+          
+          // Get image
+          const imgEl = card.querySelector('img');
+          let image = '';
+          if (imgEl) {
+            image = imgEl.src || imgEl.dataset.src || '';
+            if (image && !image.startsWith('http')) {
+              image = 'https://www.bigbadtoystore.com' + image;
+            }
+          }
+          
+          // Get price
+          const priceEl = card.querySelector('.price, [class*="price"]');
+          const priceText = priceEl ? priceEl.textContent.trim() : '';
+          const price = cleanPrice(priceText);
+          
+          // Get preorder/release info
+          let rel = '';
+          const preorderEl = card.querySelector('[class*="preorder"], [class*="pre-order"], .badge, [class*="badge"]');
+          if (preorderEl) {
+            const text = preorderEl.textContent.trim();
+            if (text.toLowerCase().includes('preorder') || text.toLowerCase().includes('pre-order')) {
+              rel = text;
+            }
+          }
+          
+          results.push([name, image, 'BigBadToyStore', url, price, '', rel]);
+        } catch (err) {
+          console.error('Error extracting product:', err);
+        }
+      });
+      
+      return results;
+    });
 
-    const results = [];
-    for (const url of uniqueLinks) {
-      try {
-        console.log(`Visiting ${url}...`);
-        await page.goto(url, { waitUntil: 'networkidle0' });
-
-        const product = await extractFromProductPage(page);
-        results.push(product);
-        console.log(`Extracted: ${product[0]}`);
-      } catch (error) {
-        console.error(`Error scraping product ${url}:`, error);
-        // Skip this product
-      }
-    }
-
-    console.log(`Returning ${results.length} results.`);
-    return results;
+    console.log(`Extracted ${products.length} products from page ${pageNum}`);
+    return products;
+    
   } catch (error) {
-    console.error(`Error scraping BBTS page ${pageNum}:`, error);
+    console.error(`Error scraping BBTS page ${pageNum}:`, error.message);
     return [];
   } finally {
     await browser.close();

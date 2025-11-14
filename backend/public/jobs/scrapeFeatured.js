@@ -3,6 +3,9 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '..', '..', 
 const scrapeSJSFeatured = require('../scrappers/sjsFeatured.js');
 const scrapeSTOMFeatured = require('../scrappers/stomFeatured.js');
 const scrapeBBTS = require('../scrappers/bigbadtoystore.js');
+const scrapeDnDMini = require('../scrappers/dndmini.js');
+const scrapeSuper7 = require('../scrappers/super7.js');
+const scrapeAnimota = require('../scrappers/animota.js');
 const mysql = require('mysql2/promise');
 
 const db = mysql.createPool({
@@ -17,10 +20,23 @@ async function scrapeFeatured() {
   await db.query('DELETE FROM featured');
   const bbtsProds = await scrapeBBTS.scrapeBBTSVari(1);
   const bbtsItems = bbtsProds.map(([name, image, website, url, price, preowned, rel]) => [name, image, website, url, null, rel]);
+  
+  const dndMiniProds = await scrapeDnDMini.scrapeDnDMiniVari(1);
+  const dndMiniItems = dndMiniProds.map(([name, image, website, url, price, preowned, rel]) => [name, image, website, url, null, rel]);
+  
+  const super7Prods = await scrapeSuper7.scrapeSuper7Vari(1);
+  const super7Items = super7Prods.map(([name, image, website, url, price, preowned, rel]) => [name, image, website, url, null, rel]);
+  
+  const animotaProds = await scrapeAnimota.scrapeAnimotaVari(1);
+  const animotaItems = animotaProds.map(([name, image, website, url, price, preowned, rel]) => [name, image, website, url, null, rel]);
+  
   const items = [
     ...(await scrapeSJSFeatured.scrapeSJSFeatured()),
     ...(await scrapeSTOMFeatured.scrapeSTOMFeatured()),
-    ...bbtsItems
+    ...bbtsItems,
+    ...dndMiniItems,
+    ...super7Items,
+    ...animotaItems
   ];
   for (const [name, images, website, url, preorder, release] of items) {
     const primaryImage = Array.isArray(images) ? images[0] : images.split('>>><<<')[0];
