@@ -28,7 +28,7 @@
   .search input{
     flex:1;border:none;padding:.5rem 1rem;font-size:1rem;outline:none;
   }
-  .search svg{padding:.5rem;color:var(--clr-primary)}
+  .search svg{padding:.5rem;color:var(--clr-primary);font-size:1.5rem}
   
   /* primary nav‑link / button */
   .navbar__link{

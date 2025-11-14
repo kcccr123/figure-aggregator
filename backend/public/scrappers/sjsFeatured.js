@@ -36,7 +36,7 @@ async function extractProduct(page) {
 
     const price = "$" + (() => {
         const priceSpan = document.querySelector('.product__price .money[data-product-price]');
-        if (!priceSpan) return '';
+        if (!priceSpan) return null;
         const raw = priceSpan.getAttribute('data-currency-cad') || priceSpan.textContent;
         return raw.replace(/[^\d.]/g, '');
       })();
@@ -62,12 +62,20 @@ async function scrapeSJSFeatured() {
 
     const results = [];
     for (let i = 0; i < productLinks.length; i++) {
-      await page.goto(productLinks[i], { waitUntil: 'networkidle0' });
-      const data = await extractProduct(page);
-      console.log(`Featured item ${i + 1}:`, data);      // ← log each product
-      results.push(data);
+      try {
+        await page.goto(productLinks[i], { waitUntil: 'networkidle0' });
+        const data = await extractProduct(page);
+        console.log(`Featured item ${i + 1}:`, data);      // ← log each product
+        results.push(data);
+      } catch (error) {
+        console.error(`Error scraping featured item ${i + 1}:`, error);
+        // Skip this item
+      }
     }
     return results;
+  } catch (error) {
+    console.error('Error in scrapeSJSFeatured:', error);
+    return [];
   } finally {
     await browser.close();
   }
@@ -75,4 +83,4 @@ async function scrapeSJSFeatured() {
 
 module.exports = { scrapeSJSFeatured };
 
-//scrapeSJSFeatured()
+// scrapeSJSFeatured()

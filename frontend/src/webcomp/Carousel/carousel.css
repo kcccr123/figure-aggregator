@@ -1,0 +1,236 @@
+.featured-carousel {
+  width: 100%;
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 2rem 1rem;
+}
+
+/* Slick Carousel Overrides */
+.featured-carousel .slick-slider {
+  position: relative;
+}
+
+.featured-carousel .slick-list {
+  overflow: visible;
+  margin: 0 -15px;
+}
+
+.featured-carousel .slick-track {
+  display: flex;
+  align-items: center;
+}
+
+.featured-carousel .slick-slide {
+  padding: 2rem 15px;
+  transition: all 0.5s cubic-bezier(0.645, 0.045, 0.355, 1);
+  transform: scale(0.85);
+  opacity: 0.5;
+  filter: blur(2px);
+}
+
+/* Center/Active Slide - Prominent */
+.featured-carousel .slick-slide.slick-active.slick-center {
+  transform: scale(1);
+  opacity: 1;
+  filter: blur(0);
+  z-index: 10;
+}
+
+/* Adjacent Active Slides - Slightly Faded */
+.featured-carousel .slick-slide.slick-active:not(.slick-center) {
+  transform: scale(0.92);
+  opacity: 0.7;
+  filter: blur(1px);
+  z-index: 5;
+}
+
+/* Carousel Item Wrapper */
+.carousel-item {
+  outline: none;
+  height: 100%;
+}
+
+/* Card Styling */
+.carousel-card {
+  display: block;
+  background: var(--clr-bg-card, #fff);
+  border: 2px solid var(--clr-border, #e0e0e0);
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+}
+
+.featured-carousel .slick-slide.slick-active.slick-center .carousel-card {
+  border-color: var(--clr-primary, #ff4081);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.carousel-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Image Container */
+.carousel-card__image-wrapper {
+  width: 100%;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  background: #f5f5f5;
+  position: relative;
+}
+
+.carousel-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.carousel-card:hover .carousel-card__image {
+  transform: scale(1.05);
+}
+
+/* Content Area */
+.carousel-card__content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.carousel-card__title {
+  font-family: var(--font-heading, sans-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+  color: var(--clr-text-primary, #333);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.6rem;
+}
+
+/* Meta Information */
+.carousel-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.carousel-card__line {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--clr-text-secondary, #666);
+}
+
+.carousel-card__price {
+  font-weight: 600;
+  color: var(--clr-primary, #ff4081);
+  font-size: 1rem;
+}
+
+.carousel-card__sold-out {
+  color: #999;
+  font-style: italic;
+}
+
+/* Store Badge */
+.carousel-card__store {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--clr-primary, #ff4081);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  margin-top: auto;
+}
+
+/* Arrow Buttons */
+.featured-carousel .slick-arrow {
+  width: 50px;
+  height: 50px;
+  z-index: 100;
+}
+
+.featured-carousel .slick-arrow:before {
+  font-size: 50px;
+  color: #4a4a4a;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.featured-carousel .slick-arrow:hover:before {
+  opacity: 1;
+  color: #2a2a2a;
+}
+
+.featured-carousel .slick-prev {
+  left: -25px;
+}
+
+.featured-carousel .slick-next {
+  right: -25px;
+}
+
+/* Dots/Indicators */
+.featured-carousel .slick-dots {
+  bottom: -40px;
+}
+
+.featured-carousel .slick-dots li button:before {
+  font-size: 12px;
+  color: var(--clr-primary, #ff4081);
+  opacity: 0.3;
+  transition: all 0.3s ease;
+}
+
+.featured-carousel .slick-dots li.slick-active button:before {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .featured-carousel {
+    padding: 1rem 0;
+  }
+  
+  .carousel-card__title {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-item {
+    padding: 1rem 0.5rem;
+  }
+  
+  .carousel-card__content {
+    padding: 1rem;
+  }
+  
+  .carousel-card__title {
+    font-size: 0.95rem;
+    -webkit-line-clamp: 3;
+  }
+  
+  .carousel .control-arrow {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
