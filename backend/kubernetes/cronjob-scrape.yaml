@@ -1,0 +1,109 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: figure-scraper-cron
+  namespace: default
+spec:
+  # Run every 6 hours - adjust as needed
+  # Format: minute hour day month weekday
+  # Examples:
+  #   "0 */6 * * *"   - Every 6 hours
+  #   "0 0 * * *"     - Daily at midnight
+  #   "0 */12 * * *"  - Every 12 hours
+  #   "0 2 * * *"     - Daily at 2 AM
+  schedule: "0 */6 * * *"
+  
+  # Keep last 3 successful and 1 failed job for debugging
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  
+  # Prevent concurrent runs
+  concurrencyPolicy: Forbid
+  
+  # Job will be marked as failed if it takes longer than 1 hour
+  startingDeadlineSeconds: 3600
+  
+  jobTemplate:
+    spec:
+      # Job will be deleted after 24 hours
+      ttlSecondsAfterFinished: 86400
+      
+      # Retry failed jobs up to 2 times
+      backoffLimit: 2
+      
+      template:
+        metadata:
+          labels:
+            app: figure-scraper
+            job-type: cron-scrape
+        spec:
+          restartPolicy: OnFailure
+          
+          volumes:
+            - name: cloudsql-instance-credentials
+              secret:
+                secretName: cloudsql-creds
+          
+          containers:
+          # Cloud SQL Proxy sidecar
+          - name: cloudsql-proxy
+            image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.16.0
+            command:
+              - "/cloud-sql-proxy"
+              - "reciept-scanner-431421:us-central1:figure-sql"
+              - "--credentials-file=/secrets/cloudsql/credentials.json"
+            volumeMounts:
+              - name: cloudsql-instance-credentials
+                mountPath: /secrets/cloudsql
+                readOnly: true
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+          
+          # Scraper application
+          - name: scraper
+            image: gcr.io/reciept-scanner-431421/figure-aggregator:latest
+            imagePullPolicy: Always
+            
+            # Run the cron scrape script
+            command: ["node"]
+            args: ["public/jobs/cronScrape.js"]
+            
+            # Environment variables for database connection
+            env:
+            - name: DB_HOST
+              value: "127.0.0.1"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: aggregator-mysql-creds
+                  key: username
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: aggregator-mysql-creds
+                  key: password
+            - name: DB_NAME
+              value: "aggregatordb"
+            - name: NODE_ENV
+              value: "production"
+            
+            # Resource limits to prevent overconsumption
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "500m"
+              limits:
+                memory: "1Gi"
+                cpu: "1000m"
+            
+            # Timeout: if script runs longer than 50 minutes, kill it
+            # (leaves 10 min buffer before startingDeadlineSeconds)
+            lifecycle:
+              preStop:
+                exec:
+                  command: ["sh", "-c", "sleep 5"]
