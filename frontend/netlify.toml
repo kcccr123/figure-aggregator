@@ -9,9 +9,6 @@
   publish   = "build"
 
 [build.environment]
-  # Disable Python - not needed for this project
-  PYTHON_VERSION = ""
-  
   # Point to your GKE Ingress IP (or custom domain) in production
   REACT_APP_API_BASE_URL = "https://34.110.244.134.nip.io/figures"
 
