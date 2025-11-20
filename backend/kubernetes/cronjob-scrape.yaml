@@ -4,14 +4,10 @@ metadata:
   name: figure-scraper-cron
   namespace: default
 spec:
-  # Run every 6 hours - adjust as needed
+  # Run every 48 hours (every 2 days at midnight)
   # Format: minute hour day month weekday
-  # Examples:
-  #   "0 */6 * * *"   - Every 6 hours
-  #   "0 0 * * *"     - Daily at midnight
-  #   "0 */12 * * *"  - Every 12 hours
-  #   "0 2 * * *"     - Daily at 2 AM
-  schedule: "0 */6 * * *"
+  # "0 0 */2 * *" - Every 2 days at midnight
+  schedule: "0 0 */2 * *"
   
   # Keep last 3 successful and 1 failed job for debugging
   successfulJobsHistoryLimit: 3
