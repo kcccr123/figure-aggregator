@@ -57,6 +57,9 @@ export default function HomePage(){
       </section>
 
       <section className="showcase">
+        <div className="stores-divider">
+          <span>STORES</span>
+        </div>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
             <CircularProgress style={{ color: 'var(--clr-primary)' }} size={60} />
@@ -66,12 +69,14 @@ export default function HomePage(){
             <div key={store} className="store-section">
               <h2 className="section-heading">{formatStoreName(store)}</h2>
               <FeaturedCarousel items={items} />
-              <Link
-                to={"/search?" + createSearchParams({query:"", filters: generateStoreFilter(store)}).toString()}
-                className="navbar__link show-more"
-              >
-                More from {formatStoreName(store)}
-              </Link>
+              <div className="show-more-container">
+                <Link
+                  to={"/search?" + createSearchParams({query:"", filters: generateStoreFilter(store)}).toString()}
+                  className="navbar__link show-more"
+                >
+                  More from {formatStoreName(store)}
+                </Link>
+              </div>
             </div>
           ))
         )}
