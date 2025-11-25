@@ -33,6 +33,8 @@ Figure Aggregator is a personal learning project that unifies multiple collectib
 ### Frontend
 The frontend is built with React.js, and products are dynamically displayed via Axios calls to the API. It is currently deployed on Netlify.
 
+https://figure-center.netlify.app/
+
 ### Backend
 The backend architecture runs on Google Cloud Platform, specifically on Google Kubernetes Engine.
 
