@@ -44,7 +44,7 @@ async function scrapeSJS() {
 
   for (let page = 1; page <= maxPages; page++) {
     console.log(`${'='.repeat(60)}`);
-    console.log(`📖 Page ${page}/${maxPages}`);
+    console.log(`Page ${page}/${maxPages}`);
     console.log(`${'='.repeat(60)}`);
 
     try {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -6,6 +6,7 @@ import './carousel.css';
 
 export default function FeaturedCarousel({ items }) {
   const [currentSlide, setCurrentSlide] = useState(Math.floor(items.length / 2));
+  const sliderRef = useRef(null);
 
   const formatPrice = (price) => {
     return price ? `$${price}` : null;
@@ -18,7 +19,7 @@ export default function FeaturedCarousel({ items }) {
   };
 
   const settings = {
-    dots: true,
+    dots: false,
     infinite: true,
     speed: 500,
     slidesToShow: 3,
@@ -27,7 +28,7 @@ export default function FeaturedCarousel({ items }) {
     centerPadding: '60px',
     focusOnSelect: true,
     swipeToSlide: true,
-    arrows: true,
+    arrows: false,
     autoplay: false,
     cssEase: 'cubic-bezier(0.645, 0.045, 0.355, 1)',
     initialSlide: Math.floor(items.length / 2),
@@ -52,7 +53,7 @@ export default function FeaturedCarousel({ items }) {
 
   return (
     <div className="featured-carousel">
-      <Slider {...settings}>
+      <Slider ref={sliderRef} {...settings}>
         {items.map((item, index) => (
           <div key={item.name} className="carousel-item">
             <a 
@@ -84,6 +85,37 @@ export default function FeaturedCarousel({ items }) {
           </div>
         ))}
       </Slider>
+      
+      <div className="carousel-controls">
+        <button 
+          className="carousel-controls__arrow carousel-controls__arrow--prev"
+          onClick={() => sliderRef.current?.slickPrev()}
+          aria-label="Previous slide"
+        >
+          <span>‹</span>
+        </button>
+        
+        <div className="carousel-controls__dots">
+          {items.map((_, index) => (
+            <button
+              key={index}
+              className={`carousel-controls__dot ${
+                index === currentSlide ? 'carousel-controls__dot--active' : ''
+              }`}
+              onClick={() => sliderRef.current?.slickGoTo(index)}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+        
+        <button 
+          className="carousel-controls__arrow carousel-controls__arrow--next"
+          onClick={() => sliderRef.current?.slickNext()}
+          aria-label="Next slide"
+        >
+          <span>›</span>
+        </button>
+      </div>
     </div>
   );
 }

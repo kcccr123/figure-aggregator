@@ -22,7 +22,7 @@ async function getCollections() {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36');
 
     console.log('Fetching all collections from https://animota.net/collections/');
@@ -149,7 +149,7 @@ async function getCollectionPageCount(collectionUrl, page) {
       ? `${collectionUrl}&sort_by=created-descending`
       : `${collectionUrl}?sort_by=created-descending`;
     
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 1800000 });
 
     const totalPages = await page.evaluate(() => {
       // Look for pagination elements
@@ -191,7 +191,7 @@ async function scrapeAnimotaVari(pageNum = 1) {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36');
 
     // Get all collections using the same browser
@@ -264,7 +264,7 @@ async function scrapeAnimota() {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36');
 
     // Get all collections first using the same browser

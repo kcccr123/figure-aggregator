@@ -11,7 +11,7 @@ async function scrapeSTOMFeatured() {
   const browser = await launchBrowser({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
 
     await page.goto('https://otakumode.com/shop/figures-dolls/?sort=new', { waitUntil: 'networkidle0' });
 

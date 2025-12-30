@@ -21,17 +21,33 @@ const db = mysql.createPool({
 });
 
 async function checkDatabaseConnection() {
-  try {
-    console.log('Checking database connection...');
-    const connection = await db.getConnection();
-    await connection.ping();
-    connection.release();
-    console.log('✓ Database connection OK\n');
-    return true;
-  } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
-    return false;
+  // Wait for Cloud SQL Proxy to be ready
+  console.log('Waiting 5 seconds for Cloud SQL Proxy to initialize...');
+  await new Promise(resolve => setTimeout(resolve, 5000));
+  
+  let attempts = 0;
+  const maxAttempts = 5;
+  
+  while (attempts < maxAttempts) {
+    try {
+      console.log(`Database connection attempt ${attempts + 1}/${maxAttempts}...`);
+      const connection = await db.getConnection();
+      await connection.ping();
+      connection.release();
+      console.log('Database connection OK\n');
+      return true;
+    } catch (error) {
+      attempts++;
+      console.error(`Database connection attempt ${attempts} failed:`, error.message);
+      if (attempts < maxAttempts) {
+        console.log('Retrying in 3 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
   }
+  
+  console.error('Failed to connect to database after all attempts');
+  return false;
 }
 
 async function scrapeStorePage(scraperFunction, storeName) {

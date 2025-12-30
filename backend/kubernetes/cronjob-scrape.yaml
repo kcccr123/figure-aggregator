@@ -4,14 +4,10 @@ metadata:
   name: figure-scraper-cron
   namespace: default
 spec:
-  # Run every 6 hours - adjust as needed
+  # Run once every 2 days at midnight
   # Format: minute hour day month weekday
-  # Examples:
-  #   "0 */6 * * *"   - Every 6 hours
-  #   "0 0 * * *"     - Daily at midnight
-  #   "0 */12 * * *"  - Every 12 hours
-  #   "0 2 * * *"     - Daily at 2 AM
-  schedule: "0 */6 * * *"
+  # "0 0 */2 * *" - Every 2 days at midnight
+  schedule: "0 0 */2 * *"
   
   # Keep last 3 successful and 1 failed job for debugging
   successfulJobsHistoryLimit: 3
@@ -20,8 +16,8 @@ spec:
   # Prevent concurrent runs
   concurrencyPolicy: Forbid
   
-  # Job will be marked as failed if it takes longer than 1 hour
-  startingDeadlineSeconds: 3600
+  # Job will be marked as failed if it takes longer than 12 hours
+  startingDeadlineSeconds: 43200
   
   jobTemplate:
     spec:
@@ -39,39 +35,63 @@ spec:
         spec:
           restartPolicy: OnFailure
           
+          # Share process namespace so proxy can detect when main container exits
+          shareProcessNamespace: true
+          
           volumes:
             - name: cloudsql-instance-credentials
               secret:
                 secretName: cloudsql-creds
+            - name: shared-data
+              emptyDir: {}
           
           containers:
           # Cloud SQL Proxy sidecar
           - name: cloudsql-proxy
             image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.16.0
             command:
-              - "/cloud-sql-proxy"
-              - "reciept-scanner-431421:us-central1:figure-sql"
-              - "--credentials-file=/secrets/cloudsql/credentials.json"
+              - "/bin/sh"
+              - "-c"
+              - |
+                /cloud-sql-proxy reciept-scanner-431421:us-central1:figure-sql --credentials-file=/secrets/cloudsql/credentials.json &
+                PROXY_PID=$!
+                while true; do
+                  if [ -f /shared/scraper-done ]; then
+                    echo "Scraper finished, shutting down proxy..."
+                    kill $PROXY_PID
+                    exit 0
+                  fi
+                  sleep 5
+                done
             volumeMounts:
               - name: cloudsql-instance-credentials
                 mountPath: /secrets/cloudsql
                 readOnly: true
+              - name: shared-data
+                mountPath: /shared
             resources:
               requests:
-                memory: "128Mi"
-                cpu: "100m"
+                memory: "64Mi"
+                cpu: "25m"
               limits:
-                memory: "256Mi"
-                cpu: "200m"
+                memory: "128Mi"
+                cpu: "50m"
           
           # Scraper application
           - name: scraper
             image: gcr.io/reciept-scanner-431421/figure-aggregator:latest
             imagePullPolicy: Always
             
-            # Run the cron scrape script
-            command: ["node"]
-            args: ["public/jobs/cronScrape.js"]
+            # Run the cron scrape script and signal completion
+            # uses a signal file to tell cloud sql to kill itself
+            command: ["/bin/sh"]
+            args: 
+              - "-c"
+              - "node public/jobs/cronScrape.js; EXIT_CODE=$?; touch /shared/scraper-done; exit $EXIT_CODE"
+            
+            volumeMounts:
+              - name: shared-data
+                mountPath: /shared
             
             # Environment variables for database connection
             env:
@@ -96,12 +116,12 @@ spec:
             resources:
               requests:
                 memory: "512Mi"
-                cpu: "500m"
+                cpu: "100m"
               limits:
-                memory: "1Gi"
-                cpu: "1000m"
+                memory: "2Gi"
+                cpu: "300m"
             
-            # Timeout: if script runs longer than 50 minutes, kill it
+            # Timeout: if script runs longer than 11 hours 50 minutes, kill it
             # (leaves 10 min buffer before startingDeadlineSeconds)
             lifecycle:
               preStop:

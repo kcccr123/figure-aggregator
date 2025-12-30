@@ -55,7 +55,7 @@ async function getSTOMlen() {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
 
     await page.goto(
       'https://otakumode.com/shop/new_items?category=figures-dolls',
@@ -84,7 +84,7 @@ async function scrapeTOM() {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
 
     const totalPages = await getSTOMlen();
     const allProducts = [];
@@ -140,7 +140,7 @@ async function scrapeTOMVari(pageNum) {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
 
     const pageURL =
       `https://otakumode.com/shop/new_items?category=figures-dolls&page=${pageNum}`;

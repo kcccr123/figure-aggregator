@@ -101,7 +101,7 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  margin: 2rem 0 3rem;
+  margin-top: 0.25rem;
 }
 
 .showcase .show-more {
@@ -144,8 +144,9 @@
 }
 
 .store-section {
-  margin-bottom: 5rem;
+  margin-bottom: 6rem;
   animation: fade-in 0.6s ease-out;
+  overflow: hidden;
 }
 
 @keyframes fade-in {
@@ -164,8 +165,8 @@
   display: inline-block;
   left: 50%;
   transform: translateX(-50%);
-  padding-bottom: 0.75rem;
-  margin-bottom: 2.5rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .store-section .section-heading::after {
