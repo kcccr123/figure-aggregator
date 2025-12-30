@@ -4,10 +4,10 @@ metadata:
   name: figure-scraper-cron
   namespace: default
 spec:
-  # Run every 48 hours (every 2 days at midnight)
+  # Run once per hour
   # Format: minute hour day month weekday
-  # "0 0 */2 * *" - Every 2 days at midnight
-  schedule: "0 0 */2 * *"
+  # "0 * * * *" - Every hour at minute 0
+  schedule: "0 * * * *"
   
   # Keep last 3 successful and 1 failed job for debugging
   successfulJobsHistoryLimit: 3
@@ -91,11 +91,11 @@ spec:
             # Resource limits to prevent overconsumption
             resources:
               requests:
-                memory: "256Mi"
-                cpu: "50m"
-              limits:
-                memory: "768Mi"
+                memory: "512Mi"
                 cpu: "100m"
+              limits:
+                memory: "2Gi"
+                cpu: "300m"
             
             # Timeout: if script runs longer than 50 minutes, kill it
             # (leaves 10 min buffer before startingDeadlineSeconds)
