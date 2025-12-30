@@ -34,7 +34,7 @@ async function checkDatabaseConnection() {
       const connection = await db.getConnection();
       await connection.ping();
       connection.release();
-      console.log('✓ Database connection OK\n');
+      console.log('Database connection OK\n');
       return true;
     } catch (error) {
       attempts++;

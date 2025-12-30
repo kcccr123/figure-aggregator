@@ -49,13 +49,14 @@ async function extractFromPage(page) {
 
 /** Scrape a single page of results (opens and closes its own browser). */
 async function scrapeJSVari(pageNum = 1) {
-  if (pageNum < 1) throw new Error('pageNum must be ≥ 1');
+  if (pageNum < 1) throw new Error('pageNum must be ≥ 1');
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(1800000);
     await page.goto(
       `https://solarisjapan.com/collections/figures?page=${pageNum}`,
-      { waitUntil: 'networkidle0' }
+      { waitUntil: 'networkidle0', timeout: 1800000 }
     );
     const data = await extractFromPage(page);
     console.log(`Page ${pageNum}:`, data);            // log each result array
