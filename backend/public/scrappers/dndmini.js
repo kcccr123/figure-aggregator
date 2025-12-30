@@ -99,7 +99,7 @@ async function getDnDMiniLength() {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
 
     await page.goto(
       'https://www.dndmini.com/collections/all/?sort_by=created-descending',
@@ -149,7 +149,7 @@ async function scrapeDnDMiniVari(pageNum = 1) {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
     
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36');
     
@@ -180,7 +180,7 @@ async function scrapeDnDMini() {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
     
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36');
     

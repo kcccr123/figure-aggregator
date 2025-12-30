@@ -52,6 +52,7 @@ async function scrapeSJSFeatured() {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(1800000);
     await page.goto('https://solarisjapan.com', { waitUntil: 'networkidle0' });
 
     const productLinks = await page.evaluate(() =>

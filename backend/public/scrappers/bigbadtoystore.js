@@ -11,14 +11,14 @@ async function scrapeBBTSVari(pageNum = 1) {
   
   try {
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(60000);
+    page.setDefaultNavigationTimeout(1800000);
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     await page.setViewport({ width: 1920, height: 1080 });
 
     const searchUrl = `https://www.bigbadtoystore.com/Search?HideInStock=false&HidePreorder=false&HideSoldOut=false&InventoryStatus=i,p,so&PageSize=20&SortOrder=New&Department=43623&PageIndex=${pageNum}`;
     console.log(`Navigating to: ${searchUrl}`);
     
-    await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 60000 });
+    await page.goto(searchUrl, { waitUntil: 'networkidle0', timeout: 1800000 });
     await page.waitForTimeout(2000); // Wait for page to fully load
     
     console.log('Extracting products from search page...');

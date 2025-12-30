@@ -105,6 +105,7 @@ async function getSJSLength() {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(1800000);
     await page.goto('https://solarisjapan.com/collections/figures', { waitUntil: 'networkidle0' });
     const len = await page.evaluate(() => {
       const nums = Array.from(document.querySelectorAll('ul.pagination__list li a'))
